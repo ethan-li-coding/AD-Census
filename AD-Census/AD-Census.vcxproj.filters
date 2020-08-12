@@ -24,6 +24,9 @@
     <ClInclude Include="ADCensusStereo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="adcensus_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -31,6 +34,9 @@
     </ClCompile>
     <ClCompile Include="ADCensusStereo.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="adcensus_util.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

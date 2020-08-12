@@ -37,6 +37,9 @@ public:
 	bool Reset(const uint32& width, const uint32& height, const ADCensusOption& option);
 
 private:
+	/** \brief 计算灰度数据 */
+	void ComputeGray() const;
+
 	/** \brief Census变换 */
 	void CensusTransform() const;
 
@@ -51,6 +54,12 @@ private:
 
 	/** \brief 多步骤视差优化	 */
 	void MultiStepRefine() const;
+
+	/** \brief 视差计算（左视图） */
+	void ComputeDisparity() const;
+
+	/** \brief 视差计算（右视图） */
+	void ComputeDisparityRight() const;
 
 	/** \brief 内存释放	 */
 	void Release();
@@ -87,6 +96,11 @@ private:
 	uint8* gray_left_;
 	/** \brief 右影像灰度数据	 */
 	uint8* gray_right_;
+
+	/** \brief 左影像census值	*/
+	uint64* census_left_;
+	/** \brief 右影像census值	*/
+	uint64* census_right_;
 
 	/** \brief 初始匹配代价	*/
 	float32* cost_init_;

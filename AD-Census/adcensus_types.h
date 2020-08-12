@@ -32,10 +32,21 @@ typedef double			float64;	// 双精度浮点
 /** \brief float32无效值 */
 constexpr auto Invalid_Float = std::numeric_limits<float32>::infinity();
 
+constexpr auto Large_Float = 99999.0f;
+constexpr auto Small_Float = -99999.0f;
+
+/** \brief Census窗口尺寸类型 */
+enum CensusSize {
+	Census5x5 = 0,
+	Census9x7
+};
+
 /** \brief ADCensus参数结构体 */
 struct ADCensusOption {
 	sint32  min_disparity;		// 最小视差
 	sint32	max_disparity;		// 最大视差
+
+	CensusSize census_size;		// census窗口尺寸
 
 	sint32	lambda_ad;			// 控制AD代价值的参数
 	sint32	lambda_census;		// 控制Census代价值的参数
@@ -54,11 +65,11 @@ struct ADCensusOption {
 
 	bool	is_fill_holes;		// 是否填充视差空洞
 
-	ADCensusOption(): min_disparity(0), max_disparity(64), 
-					  lambda_ad(10), lambda_census(30),
-					  cross_L1(34), cross_L2(17),
+	ADCensusOption(): min_disparity(0), max_disparity(64), census_size(Census9x7),
+	                  lambda_ad(10), lambda_census(30),
+	                  cross_L1(34), cross_L2(17),
 	                  cross_t1(20), cross_t2(6),
-					  so_p1(1.0f), so_p2(3.0f),
+	                  so_p1(1.0f), so_p2(3.0f),
 	                  so_tso(15), irv_ts(20), irv_th(0.4f),
 	                  is_check_lr(false),
 	                  lrcheck_thres(0),
