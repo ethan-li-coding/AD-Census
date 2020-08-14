@@ -53,6 +53,11 @@ bool ADCensusStereo::Initialize(const sint32& width, const sint32& height, const
 	// 视差图
 	disp_left_ = new float32[img_size];
 	disp_right_ = new float32[img_size];
+	
+	// 初始化代价计算器
+	if(!aggregator_.Initialize(width_, height_)) {
+		return false;
+	}
 
 	is_initialized_ = gray_left_ && gray_right_ && cost_init_ && cost_aggr_  && disp_left_ && disp_right_;
 
@@ -190,9 +195,16 @@ void ADCensusStereo::ComputeCost() const
 	}
 }
 
-void ADCensusStereo::CostAggregation() const
+void ADCensusStereo::CostAggregation()
 {
-	
+	// 设置聚合器数据
+	aggregator_.SetData(img_left_, img_right_, cost_init_, cost_aggr_);
+	// 设置聚合器参数
+	aggregator_.SetParams(option_.cross_L1, option_.cross_L2, option_.cross_t1, option_.cross_t2, option_.min_disparity, option_.max_disparity);
+	// 聚合器计算聚合臂
+	aggregator_.BuildArms();
+	// 聚合器聚合
+	aggregator_.Aggregate(4);
 }
 
 void ADCensusStereo::ScanlineOptimize() const

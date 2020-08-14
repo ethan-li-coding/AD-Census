@@ -6,6 +6,7 @@
 #pragma once
 
 #include "adcensus_types.h"
+#include "cross_aggregator.h"
 
 class ADCensusStereo {	
 public:
@@ -47,7 +48,7 @@ private:
 	void ComputeCost() const;
 
 	/** \brief 代价聚合	 */
-	void CostAggregation() const;
+	void CostAggregation();
 
 	/** \brief 扫描线优化	 */
 	void ScanlineOptimize() const;
@@ -106,6 +107,9 @@ private:
 	float32* cost_init_;
 	/** \brief 聚合匹配代价	*/
 	float32* cost_aggr_;
+
+	/** \brief 代价聚合器	*/
+	CrossAggregator aggregator_;
 
 	/** \brief 左影像视差图	*/
 	float32* disp_left_;

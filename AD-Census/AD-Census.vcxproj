@@ -152,6 +152,7 @@
     <ClInclude Include="ADCensusStereo.h" />
     <ClInclude Include="adcensus_types.h" />
     <ClInclude Include="adcensus_util.h" />
+    <ClInclude Include="cross_aggregator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ADCensusStereo.cpp">
@@ -159,6 +160,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="adcensus_util.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="cross_aggregator.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

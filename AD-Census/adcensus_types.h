@@ -79,10 +79,10 @@ struct ADCensusOption {
 /**
 * \brief 颜色结构体
 */
-struct PColor {
+struct ADColor {
 	uint8 r, g, b;
-	PColor() : r(0), g(0), b(0) {}
-	PColor(uint8 _b, uint8 _g, uint8 _r) {
+	ADColor() : r(0), g(0), b(0) {}
+	ADColor(uint8 _b, uint8 _g, uint8 _r) {
 		r = _r; g = _g; b = _b;
 	}
 };

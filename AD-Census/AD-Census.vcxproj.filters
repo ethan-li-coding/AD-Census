@@ -27,6 +27,9 @@
     <ClInclude Include="adcensus_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cross_aggregator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -37,6 +40,9 @@
     </ClCompile>
     <ClCompile Include="adcensus_util.cpp">
       <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cross_aggregator.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
