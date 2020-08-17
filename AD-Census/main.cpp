@@ -77,7 +77,9 @@ int main(int argv, char** argc)
 	printf("Done!\n");
 
 	// AD-Census謄塘歌方譜柴
-	ADCensusOption pms_option;
+	ADCensusOption ad_option;
+	ad_option.is_check_lr = true;
+	ad_option.lrcheck_thres = 1.0f;
 
 	// 協吶AD-Census謄塘窃糞箭
 	ADCensusStereo ad_census;
@@ -86,7 +88,7 @@ int main(int argv, char** argc)
 	auto start = std::chrono::steady_clock::now();
 	//，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，，//
 	// 兜兵晒
-	if (!ad_census.Initialize(width, height, pms_option)) {
+	if (!ad_census.Initialize(width, height, ad_option)) {
 		std::cout << "AD-Census兜兵晒払移��" << std::endl;
 		return -2;
 	}

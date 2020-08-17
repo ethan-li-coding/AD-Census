@@ -1,6 +1,6 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
 * Author	: Ethan Li <ethan.li.whu@gmail.com>
-*			  https://github.com/ethan-li-coding
+*			  https://github.com/ethan-li-coding/AD-Census
 * Describe	: header of ad-census stereo class
 */
 #pragma once
@@ -54,7 +54,7 @@ private:
 	void ScanlineOptimize() const;
 
 	/** \brief 多步骤视差优化	 */
-	void MultiStepRefine() const;
+	void MultiStepRefine();
 
 	/** \brief 视差计算（左视图） */
 	void ComputeDisparity() const;
@@ -115,6 +115,11 @@ private:
 	float32* disp_left_;
 	/** \brief 右影像视差图	*/
 	float32* disp_right_;
+
+	/** \brief 遮挡区像素集	*/
+	std::vector<std::pair<int, int>> occlusions_;
+	/** \brief 误匹配区像素集	*/
+	std::vector<std::pair<int, int>> mismatches_;
 
 	/** \brief 是否初始化标志	*/
 	bool is_initialized_;

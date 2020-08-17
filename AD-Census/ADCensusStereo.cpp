@@ -1,6 +1,6 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
 * Author	: Ethan Li <ethan.li.whu@gmail.com>
-*			  https://github.com/ethan-li-coding
+*			  https://github.com/ethan-li-coding/AD-Census
 * Describe	: implement of ad-census stereo class
 */
 #include "ADCensusStereo.h"
@@ -50,6 +50,7 @@ bool ADCensusStereo::Initialize(const sint32& width, const sint32& height, const
 	// 代价数据
 	cost_init_ = new float32[img_size*disp_range];
 	cost_aggr_ = new float32[img_size*disp_range];
+
 	// 视差图
 	disp_left_ = new float32[img_size];
 	disp_right_ = new float32[img_size];
@@ -209,12 +210,17 @@ void ADCensusStereo::CostAggregation()
 
 void ADCensusStereo::ScanlineOptimize() const
 {
-	
+	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
+	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
+	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
+	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
 }
 
-void ADCensusStereo::MultiStepRefine() const
+void ADCensusStereo::MultiStepRefine()
 {
-	
+	if (option_.is_check_lr) {
+		OutlierDetection();
+	}
 }
 
 void ADCensusStereo::ComputeDisparity() const
@@ -229,7 +235,7 @@ void ADCensusStereo::ComputeDisparity() const
 	// 左影像视差图
 	const auto disparity = disp_left_;
 	// 左影像聚合代价数组
-	const auto cost_ptr = cost_init_;
+	const auto cost_ptr = cost_aggr_;
 
 	const sint32 width = width_;
 	const sint32 height = height_;
@@ -346,7 +352,70 @@ void ADCensusStereo::Release()
 
 void ADCensusStereo::OutlierDetection()
 {
-	
+	const sint32 width = width_;
+	const sint32 height = height_;
+
+	const float32& threshold = option_.lrcheck_thres;
+
+	// 遮挡区像素和误匹配区像素
+	auto& occlusions = occlusions_;
+	auto& mismatches = mismatches_;
+	occlusions.clear();
+	mismatches.clear();
+
+	// ---左右一致性检查
+	for (sint32 i = 0; i < height; i++) {
+		for (sint32 j = 0; j < width; j++) {
+
+			// 左影像视差值
+			auto& disp = disp_left_[i * width + j];
+
+			if (disp == Invalid_Float) {
+				mismatches.emplace_back(i, j);
+				continue;
+			}
+
+			// 根据视差值找到右影像上对应的同名像素
+			const auto col_right = static_cast<sint32>(j - disp + 0.5);
+
+			if (col_right >= 0 && col_right < width) {
+
+				// 右影像上同名像素的视差值
+				const auto& disp_r = disp_right_[i * width + col_right];
+
+				// 判断两个视差值是否一致（差值在阈值内）
+				if (abs(disp - disp_r) > threshold) {
+					// 区分遮挡区和误匹配区
+					// 通过右影像视差算出在左影像的匹配像素，并获取视差disp_rl
+					// if(disp_rl > disp) 
+					//		pixel in occlusions
+					// else 
+					//		pixel in mismatches
+					const sint32 col_rl = static_cast<sint32>(col_right + disp_r + 0.5);
+					if (col_rl > 0 && col_rl < width) {
+						const auto& disp_l = disp_left_[i*width + col_rl];
+						if (disp_l > disp) {
+							occlusions.emplace_back(i, j);
+						}
+						else {
+							mismatches.emplace_back(i, j);
+						}
+					}
+					else {
+						mismatches.emplace_back(i, j);
+					}
+
+					// 让视差值无效
+					disp = Invalid_Float;
+				}
+			}
+			else {
+				// 通过视差值在右影像上找不到同名像素（超出影像范围）
+				disp = Invalid_Float;
+				mismatches.emplace_back(i, j);
+			}
+		}
+	}
 }
 
 void ADCensusStereo::IterativeRegionVoting()

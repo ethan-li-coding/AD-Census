@@ -1,6 +1,6 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
 * Author	: Ethan Li <ethan.li.whu@gmail.com>
-*			  https://github.com/ethan-li-coding
+*			  https://github.com/ethan-li-coding/AD-Census
 * Describe	: header of adcensus_types
 */
 
@@ -46,8 +46,6 @@ struct ADCensusOption {
 	sint32  min_disparity;		// 最小视差
 	sint32	max_disparity;		// 最大视差
 
-	CensusSize census_size;		// census窗口尺寸
-
 	sint32	lambda_ad;			// 控制AD代价值的参数
 	sint32	lambda_census;		// 控制Census代价值的参数
 	sint32	cross_L1;			// 十字交叉窗口的空间域参数：L1
@@ -63,17 +61,14 @@ struct ADCensusOption {
 	bool	is_check_lr;		// 是否检查左右一致性
 	float32	lrcheck_thres;		// 左右一致性约束阈值
 
-	bool	is_fill_holes;		// 是否填充视差空洞
-
-	ADCensusOption(): min_disparity(0), max_disparity(64), census_size(Census9x7),
+	ADCensusOption(): min_disparity(0), max_disparity(64),
 	                  lambda_ad(10), lambda_census(30),
 	                  cross_L1(34), cross_L2(17),
 	                  cross_t1(20), cross_t2(6),
 	                  so_p1(1.0f), so_p2(3.0f),
 	                  so_tso(15), irv_ts(20), irv_th(0.4f),
-	                  is_check_lr(false),
-	                  lrcheck_thres(0),
-	                  is_fill_holes(false) {} ;
+	                  is_check_lr(true),
+	                  lrcheck_thres(1.0f) {} ;
 };
 
 /**
