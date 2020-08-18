@@ -80,6 +80,9 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	// 计算灰度图
 	ComputeGray();
 
+	// Census变换
+	CensusTransform();
+
 	// 代价计算
 	ComputeCost();
 
@@ -87,7 +90,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	CostAggregation();
 
 	// 扫描线优化
-	ScanlineOptimize();
+	//ScanlineOptimize();
 
 	// 计算左右视图视差
 	ComputeDisparity();
@@ -141,9 +144,16 @@ void ADCensusStereo::ComputeGray() const
 
 void ADCensusStereo::CensusTransform() const
 {
+	const sint32 width = width_;
+	const sint32 height = height_;
+	if (width <= 0 || height <= 0 ||
+		gray_left_ == nullptr || gray_right_ == nullptr ||
+		census_left_ == nullptr || census_right_ == nullptr) {
+		return;
+	}
 	// 左右影像census变换
-	adcensus_util::census_transform_9x7(img_left_, static_cast<uint64*>(census_left_), width_, height_);
-	adcensus_util::census_transform_9x7(img_right_, static_cast<uint64*>(census_right_), width_, height_);
+	adcensus_util::census_transform_9x7(gray_left_, census_left_, width, height);
+	adcensus_util::census_transform_9x7(gray_right_, census_right_, width, height);
 }
 
 void ADCensusStereo::ComputeCost() const
@@ -169,7 +179,7 @@ void ADCensusStereo::ComputeCost() const
 			const auto bl = img_left_[i*width * 3 + 3*j];
 			const auto gl = img_left_[i*width * 3 + 3*j + 1];
 			const auto rl = img_left_[i*width * 3 + 3*j + 2];
-			const auto& census_val_l = static_cast<uint64*>(census_left_)[i * width_ + j];
+			const auto& census_val_l = census_left_[i * width_ + j];
 			// 逐视差计算代价值
 			for (sint32 d = min_disparity; d < max_disparity; d++) {
 				auto& cost = cost_init_[i * width_ * disp_range + j * disp_range + (d - min_disparity)];
@@ -186,7 +196,7 @@ void ADCensusStereo::ComputeCost() const
 				const float32 cost_ad = (abs(bl - br) + abs(gl - gr) + abs(rl - rr)) / 3.0f;
 
 				// census代价
-				const auto& census_val_r = static_cast<uint64*>(census_right_)[i * width_ + jr];
+				const auto& census_val_r = census_right_[i * width_ + jr];
 				const auto cost_census = static_cast<float32>(adcensus_util::Hamming64(census_val_l, census_val_r));
 
 				// ad-census代价

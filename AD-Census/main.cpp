@@ -78,7 +78,7 @@ int main(int argv, char** argc)
 
 	// AD-Census匹配参数设计
 	ADCensusOption ad_option;
-	ad_option.is_check_lr = true;
+	ad_option.is_check_lr = false;
 	ad_option.lrcheck_thres = 1.0f;
 
 	// 定义AD-Census匹配类实例
@@ -115,8 +115,6 @@ int main(int argv, char** argc)
 	ShowDisparityMap(disparity, width, height, "disp-left");
 	// 保存视差图
 	SaveDisparityMap(disparity, width, height, path_left);
-	// 保存视差点云
-	SaveDisparityCloud(bytes_left, disparity, width, height, path_left);
 
 	cv::waitKey(0);
 

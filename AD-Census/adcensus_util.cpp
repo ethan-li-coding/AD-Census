@@ -22,7 +22,7 @@ void adcensus_util::census_transform_9x7(const uint8* source, uint64* census, co
 			// 中心像素值
 			const uint8 gray_center = source[i * width + j];
 
-			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
+			// 遍历大小为9x7的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
 			uint64 census_val = 0u;
 			for (sint32 r = -4; r <= 4; r++) {
 				for (sint32 c = -3; c <= 3; c++) {

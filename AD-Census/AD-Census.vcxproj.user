@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>..\Data\cone\im2.png ..\Data\cone\im6.png 0 64</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>..\Data\tsukuba\scene1.row3.col3.ppm ..\Data\tsukuba\scene1.row3.col5.ppm 0 32</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>..\Data\cone\im2.png ..\Data\cone\im6.png 0 64</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>..\Data\tsukuba\scene1.row3.col3.ppm ..\Data\tsukuba\scene1.row3.col5.ppm 0 32</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
