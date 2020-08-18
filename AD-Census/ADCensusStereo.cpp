@@ -200,7 +200,7 @@ void ADCensusStereo::ComputeCost() const
 				const auto cost_census = static_cast<float32>(adcensus_util::Hamming64(census_val_l, census_val_r));
 
 				// ad-census代价
-				cost = 2 - exp(-cost_ad / lambda_ad) - exp(-cost_census / lambda_census);
+				cost = 1 - exp(-cost_ad / lambda_ad) + 1 - exp(-cost_census / lambda_census);
 			}
 		}
 	}
@@ -280,8 +280,13 @@ void ADCensusStereo::ComputeDisparity() const
 			const float32 cost_1 = cost_local[idx_1];
 			const float32 cost_2 = cost_local[idx_2];
 			// 解一元二次曲线极值
-			const float32 denom = std::max(1.0f, cost_1 + cost_2 - 2 * min_cost);
-			disparity[i * width + j] = static_cast<float32>(best_disparity) + (cost_1 - cost_2) / (denom * 2.0f);
+			const float32 denom = cost_1 + cost_2 - 2 * min_cost;
+			if (denom != 0.0f) {
+				disparity[i * width + j] = static_cast<float32>(best_disparity) + (cost_1 - cost_2) / (denom * 2.0f);
+			}
+			else {
+				disparity[i * width + j] = static_cast<float32>(best_disparity);
+			}
 		}
 	}
 }
@@ -342,8 +347,13 @@ void ADCensusStereo::ComputeDisparityRight() const
 			const float32 cost_1 = cost_local[idx_1];
 			const float32 cost_2 = cost_local[idx_2];
 			// 解一元二次曲线极值
-			const float32 denom = std::max(1.0f, cost_1 + cost_2 - 2 * min_cost);
-			disparity[i * width + j] = static_cast<float32>(best_disparity) + (cost_1 - cost_2) / (denom * 2.0f);
+			const float32 denom = cost_1 + cost_2 - 2 * min_cost;
+			if (denom != 0.0f) {
+				disparity[i * width + j] = static_cast<float32>(best_disparity) + (cost_1 - cost_2) / (denom * 2.0f);
+			}
+			else {
+				disparity[i * width + j] = static_cast<float32>(best_disparity);
+			}
 		}
 	}
 }

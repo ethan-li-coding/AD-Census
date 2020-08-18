@@ -5,7 +5,6 @@
 */
 
 #include "cross_aggregator.h"
-#include <algorithm>
 
 CrossAggregator::CrossAggregator(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr), 
 									cost_init_(nullptr), cost_aggr_(nullptr),
@@ -138,7 +137,7 @@ void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8&
 		// 延伸臂直到条件不满足
 		// 臂长不得超过cross_L1
 		auto img = img0 + dir * 3;
-		const auto color_last = color0;
+		auto color_last = color0;
 		sint32 xn = x + dir;
 		for (sint32 n = 0; n < cross_L1_; n++) {
 
@@ -158,14 +157,14 @@ void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8&
 			const ADColor color(img[0], img[1], img[2]);
 
 			// 颜色距离1（臂上像素和计算像素的颜色距离）
-			const sint32 color_dist1 = std::max(abs(color.r - color0.r), std::max(abs(color.g - color0.g), abs(color.b - color0.b)));
+			const sint32 color_dist1 = ColorDist(color, color0);
 			if (color_dist1 >= cross_t1_) {
 				break;
 			}
 
 			// 颜色距离2（臂上像素和前一个像素的颜色距离）
 			if (n > 0) {
-				const sint32 color_dist2 = std::max(abs(color.r - color_last.r), std::max(abs(color.g - color_last.g), abs(color.b - color_last.b)));
+				const sint32 color_dist2 = ColorDist(color, color_last);
 				if (color_dist2 >= cross_t1_) {
 					break;
 				}
@@ -184,6 +183,7 @@ void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8&
 			else {
 				right++;
 			}
+			color_last = color;
 			xn += dir;
 			img += dir * 3;
 		}
@@ -205,7 +205,7 @@ void CrossAggregator::FindVerticalArm(const sint32& x, const sint32& y, uint8& t
 		// 延伸臂直到条件不满足
 		// 臂长不得超过cross_L1
 		auto img = img0 + dir * width_ * 3;
-		const auto color_last = color0;
+		auto color_last = color0;
 		sint32 yn = y + dir;
 		for (sint32 n = 0; n < cross_L1_; n++) {
 
@@ -225,14 +225,14 @@ void CrossAggregator::FindVerticalArm(const sint32& x, const sint32& y, uint8& t
 			const ADColor color(img[0], img[1], img[2]);
 
 			// 颜色距离1（臂上像素和计算像素的颜色距离）
-			const sint32 color_dist1 = std::max(abs(color.r - color0.r), std::max(abs(color.g - color0.g), abs(color.b - color0.b)));
+			const sint32 color_dist1 = ColorDist(color, color0);
 			if (color_dist1 >= cross_t1_) {
 				break;
 			}
 
 			// 颜色距离2（臂上像素和前一个像素的颜色距离）
 			if (n > 0) {
-				const sint32 color_dist2 = std::max(abs(color.r - color_last.r), std::max(abs(color.g - color_last.g), abs(color.b - color_last.b)));
+				const sint32 color_dist2 = ColorDist(color, color_last);
 				if (color_dist2 >= cross_t1_) {
 					break;
 				}
@@ -251,6 +251,7 @@ void CrossAggregator::FindVerticalArm(const sint32& x, const sint32& y, uint8& t
 			else {
 				bottom++;
 			}
+			color_last = color;
 			yn += dir;
 			img += dir * width_ * 3;
 		}

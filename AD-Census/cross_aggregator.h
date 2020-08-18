@@ -8,6 +8,7 @@
 #define AD_CENSUS_CROSS_AGGREGATOR_H_
 
 #include "adcensus_types.h"
+#include <algorithm>
 
 class CrossAggregator {
 public:
@@ -23,22 +24,60 @@ public:
 		CrossArm(): left(0), right(0), top(0), bottom(0) { }
 	};
 
+
+	/**
+	 * \brief 初始化代价聚合器
+	 * \param width		影像宽
+	 * \param height	影像高
+	 * \return true:初始化成功
+	 */
 	bool Initialize(const sint32& width, const sint32& height);
 
+
+	/**
+	 * \brief 设置代价聚合器的数据
+	 * \param img_left		// 左影像数据，三通道
+	 * \param img_right		// 右影像数据，三通道
+	 * \param cost_init		// 初始代价数组
+	 * \param cost_aggr		// 聚合代价数组
+	 */
 	void SetData(const uint8* img_left, const uint8* img_right, const float32* cost_init, float32* cost_aggr);
 
+
+	/**
+	 * \brief 设置代价聚合器的参数
+	 * \param cross_L1		// L1
+	 * \param cross_L2		// L2
+	 * \param cross_t1		// t1
+	 * \param cross_t2		// t2
+	 * \param min_disparity	// 最小视差	
+	 * \param max_disparity	// 最大视差
+	 */
 	void SetParams(const sint32& cross_L1, const sint32& cross_L2, const sint32& cross_t1, const sint32& cross_t2, const sint32& min_disparity, const sint32& max_disparity);
 
+	/** \brief 构建十字交叉臂 */
 	void BuildArms();
-	
+
+	/** \brief 聚合 */
 	void Aggregate(const sint32& num_iters);
 
+	/** \brief 获取所有像素的十字交叉臂数据 */
 	vector<CrossArm>& get_arms();
+
 private:
+	/** \brief 搜索水平臂 */
 	void FindHorizontalArm(const sint32& x, const sint32& y, uint8& left, uint8& right) const;
+	/** \brief 搜索竖直臂 */
 	void FindVerticalArm(const sint32& x, const sint32& y, uint8& top, uint8& bottom) const;
+	/** \brief 计算像素的支持区像素数量 */
 	void ComputeSupPixelCount();
+	/** \brief 聚合某个视差 */
 	void AggregateInArms(const sint32& disparity, const bool& horizontal_first);
+
+	/** \brief 计算颜色距离 */
+	inline sint32 ColorDist(const ADColor& c1,const ADColor& c2) const {
+		return std::max(abs(c1.r - c2.r), std::max(abs(c1.g - c2.g), abs(c1.b - c2.b)));
+	}
 private:
 	/** \brief 图像尺寸 */
 	sint32	width_;
