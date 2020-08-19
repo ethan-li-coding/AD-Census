@@ -77,10 +77,9 @@ void CrossAggregator::BuildArms()
 	// ÖğÏñËØ¼ÆËãÊ®×Ö½»²æ±Û
 	for (sint32 y = 0; y < height_; y++) {
 		for (sint32 x = 0; x < width_; x++) {
-			CrossArm arm;
+			CrossArm& arm = mat_cross_arms_[y * width_ + x];
 			FindHorizontalArm(x, y, arm.left, arm.right);
 			FindVerticalArm(x, y, arm.top, arm.bottom);
-			mat_cross_arms_[y*width_ + x] = arm;
 		}
 	}
 }

@@ -90,7 +90,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	CostAggregation();
 
 	// 扫描线优化
-	//ScanlineOptimize();
+	ScanlineOptimize();
 
 	// 计算左右视图视差
 	ComputeDisparity();
@@ -185,7 +185,7 @@ void ADCensusStereo::ComputeCost() const
 				auto& cost = cost_init_[i * width_ * disp_range + j * disp_range + (d - min_disparity)];
 				const sint32 jr = j - d;
 				if (jr < 0 || jr >= width_) {
-					cost = 2.0f;
+					cost = 1.0f;
 					continue;
 				}
 
@@ -200,7 +200,7 @@ void ADCensusStereo::ComputeCost() const
 				const auto cost_census = static_cast<float32>(adcensus_util::Hamming64(census_val_l, census_val_r));
 
 				// ad-census代价
-				cost =/* 1 - exp(-cost_ad / lambda_ad) +*/ 1 - exp(-cost_census / lambda_census);
+				cost = 1 - exp(-cost_ad / lambda_ad) + 1 - exp(-cost_census / lambda_census);
 			}
 		}
 	}
@@ -215,7 +215,7 @@ void ADCensusStereo::CostAggregation()
 	// 聚合器计算聚合臂
 	aggregator_.BuildArms();
 	// 聚合器聚合
-	aggregator_.Aggregate(1);
+	aggregator_.Aggregate(4);
 }
 
 void ADCensusStereo::ScanlineOptimize() const
@@ -271,9 +271,6 @@ void ADCensusStereo::ComputeDisparity() const
 					min_cost = cost;
 					best_disparity = d;
 				}
-			}
-			if(i==338&&j==54) {
-				int a = 0;
 			}
 			// ---子像素拟合
 			if (best_disparity == min_disparity || best_disparity == max_disparity - 1) {

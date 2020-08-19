@@ -99,18 +99,17 @@ void adcensus_util::CostAggregateLeftRight(const uint8* img_left, const uint8* i
 		for (sint32 j = 0; j < width - 1; j++) {
 			color = ADColor(img_row[0], img_row[1], img_row[2]);
 			const uint8 d1 = ColorDist(color, color_last);
+			uint8 d2 = d1;
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
 				const sint32 xr = x - d;
-				if (xr <= 0 || xr >= width - 1) {
-					cost_aggr_row[d] = Large_Float;
-					continue;
+				if (xr > 0 || xr < width - 1) {
+					const ADColor color_r = ADColor(img_row_r[3 * xr], img_row_r[3 * xr + 1], img_row_r[3 * xr + 2]);
+					const ADColor color_last_r = ADColor(img_row_r[3 * (xr - direction)],
+						img_row_r[3 * (xr - direction) + 1],
+						img_row_r[3 * (xr - direction) + 2]);
+					d2 = ColorDist(color_r, color_last_r);
 				}
-				const ADColor color_r = ADColor(img_row_r[3 * xr], img_row_r[3 * xr + 1], img_row_r[3 * xr + 2]);
-				const ADColor color_last_r = ADColor(img_row_r[3 * (xr - direction)],
-													 img_row_r[3 * (xr - direction) + 1], 
-													 img_row_r[3 * (xr - direction) + 2]);
-				const uint8 d2 = ColorDist(color_r, color_last_r);
 				
 				// 计算P1和P2
 				float32 P1(0.0f), P2(0.0f);
@@ -201,19 +200,17 @@ void adcensus_util::CostAggregateUpDown(const uint8* img_left, const uint8* img_
 		for (sint32 i = 0; i < height - 1; i++) {
 			color = ADColor(img_col[0], img_col[1], img_col[2]);
 			const uint8 d1 = ColorDist(color, color_last);
+			uint8 d2 = d1;
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
 				const sint32 xr = x - d;
-				if (xr < 0 || xr >= width) {
-					cost_aggr_col[d] = Large_Float;
-					continue;
+				if (xr >= 1 && xr < width - 1) {
+					const ADColor color_r = ADColor(img_right[y * width * 3 + 3 * xr], img_right[y * width * 3 + 3 * xr + 1], img_right[y * width * 3 + 3 * xr + 2]);
+					const ADColor color_last_r = ADColor(img_right[(y - direction) * width * 3 + 3 * xr],
+						img_right[(y - direction) * width * 3 + 3 * xr + 1],
+						img_right[(y - direction) * width * 3 + 3 * xr + 2]);
+					d2 = ColorDist(color_r, color_last_r);
 				}
-				const ADColor color_r = ADColor(img_right[y*width * 3 + 3 * xr], img_right[y*width * 3 + 3 * xr + 1], img_right[y*width * 3 + 3 * xr + 2]);
-				const ADColor color_last_r = ADColor(img_right[(y - direction)*width * 3 + 3 * xr], 
-													 img_right[(y - direction)*width * 3 + 3 * xr + 1], 
-													 img_right[(y - direction)*width * 3 + 3 * xr + 2]);
-				
-				const uint8 d2 = ColorDist(color_r, color_last_r);
 				// 计算P1和P2
 				float32 P1(0.0f), P2(0.0f);
 				if (d1 < tso && d2 < tso) {
