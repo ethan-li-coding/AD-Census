@@ -129,7 +129,7 @@ void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8&
 	const auto img0 = img_left_ + y * width_ * 3 + 3 * x;
 	// 像素颜色值
 	const ADColor color0(img0[0], img0[1], img0[2]);
-
+	
 	left = right = 0;
 	//计算左右臂,先左臂后右臂
 	sint32 dir = -1;

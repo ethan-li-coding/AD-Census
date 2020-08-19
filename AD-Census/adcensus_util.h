@@ -5,6 +5,7 @@
 */
 
 #pragma once
+#include <algorithm>
 #include "adcensus_types.h"
 
 
@@ -57,4 +58,8 @@ namespace adcensus_util
 	void CostAggregateUpDown(const uint8* img_left, const uint8* img_right, const sint32& width, const sint32& height, const sint32& min_disparity, const sint32& max_disparity,
 		const float32& p1, const float32& p2, const sint32& tso, const float32* cost_init, float32* cost_aggr, bool is_forward = true);
 
+	/** \brief º∆À„—’…´æ‡¿Î */
+	inline sint32 ColorDist(const ADColor& c1, const ADColor& c2) {
+		return std::max(abs(c1.r - c2.r), std::max(abs(c1.g - c2.g), abs(c1.b - c2.b)));
+	}
 }

@@ -200,7 +200,7 @@ void ADCensusStereo::ComputeCost() const
 				const auto cost_census = static_cast<float32>(adcensus_util::Hamming64(census_val_l, census_val_r));
 
 				// ad-census代价
-				cost = 1 - exp(-cost_ad / lambda_ad) + 1 - exp(-cost_census / lambda_census);
+				cost =/* 1 - exp(-cost_ad / lambda_ad) +*/ 1 - exp(-cost_census / lambda_census);
 			}
 		}
 	}
@@ -215,14 +215,18 @@ void ADCensusStereo::CostAggregation()
 	// 聚合器计算聚合臂
 	aggregator_.BuildArms();
 	// 聚合器聚合
-	aggregator_.Aggregate(4);
+	aggregator_.Aggregate(1);
 }
 
 void ADCensusStereo::ScanlineOptimize() const
 {
+	// left to right
 	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
+	// right to left
 	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
+	// up to down
 	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
+	// down to up
 	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
 }
 
@@ -268,7 +272,9 @@ void ADCensusStereo::ComputeDisparity() const
 					best_disparity = d;
 				}
 			}
-
+			if(i==338&&j==54) {
+				int a = 0;
+			}
 			// ---子像素拟合
 			if (best_disparity == min_disparity || best_disparity == max_disparity - 1) {
 				disparity[i * width + j] = Invalid_Float;
