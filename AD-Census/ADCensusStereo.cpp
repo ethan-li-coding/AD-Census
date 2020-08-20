@@ -7,11 +7,13 @@
 #include "adcensus_util.h"
 #include <algorithm>
 
+#include "scanline_optimizer.h"
+
 ADCensusStereo::ADCensusStereo(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr),
-								  gray_left_(nullptr), gray_right_(nullptr),
+                                  gray_left_(nullptr), gray_right_(nullptr),
                                   census_left_(nullptr), census_right_(nullptr),
                                   cost_init_(nullptr), cost_aggr_(nullptr), 
-								  disp_left_(nullptr), disp_right_(nullptr),
+                                  disp_left_(nullptr), disp_right_(nullptr),
                                   is_initialized_(false) { }
 
 ADCensusStereo::~ADCensusStereo()
@@ -214,20 +216,19 @@ void ADCensusStereo::CostAggregation()
 	aggregator_.SetParams(option_.cross_L1, option_.cross_L2, option_.cross_t1, option_.cross_t2, option_.min_disparity, option_.max_disparity);
 	// 聚合器计算聚合臂
 	aggregator_.BuildArms();
-	// 聚合器聚合
+	// 代价聚合
 	aggregator_.Aggregate(4);
 }
 
 void ADCensusStereo::ScanlineOptimize() const
 {
-	// left to right
-	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
-	// right to left
-	adcensus_util::CostAggregateLeftRight(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
-	// up to down
-	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_aggr_, cost_init_, true);
-	// down to up
-	adcensus_util::CostAggregateUpDown(img_left_, img_right_, width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso, cost_init_, cost_aggr_, false);
+	ScanlineOptimizer scan_line;
+	// 设置优化器数据
+	scan_line.SetData(img_left_, img_right_, cost_init_, cost_aggr_);
+	// 设置优化器参数
+	scan_line.SetParam(width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso);
+	// 扫描线优化
+	scan_line.Optimize();
 }
 
 void ADCensusStereo::MultiStepRefine()

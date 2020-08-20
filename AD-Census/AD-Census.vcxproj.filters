@@ -30,6 +30,9 @@
     <ClInclude Include="cross_aggregator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="scanline_optimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClCompile>
     <ClCompile Include="cross_aggregator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scanline_optimizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
