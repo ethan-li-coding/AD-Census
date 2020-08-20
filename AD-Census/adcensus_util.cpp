@@ -103,7 +103,7 @@ void adcensus_util::CostAggregateLeftRight(const uint8* img_left, const uint8* i
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
 				const sint32 xr = x - d;
-				if (xr > 0 || xr < width - 1) {
+				if (xr > 0 && xr < width - 1) {
 					const ADColor color_r = ADColor(img_row_r[3 * xr], img_row_r[3 * xr + 1], img_row_r[3 * xr + 2]);
 					const ADColor color_last_r = ADColor(img_row_r[3 * (xr - direction)],
 						img_row_r[3 * (xr - direction) + 1],
@@ -204,7 +204,7 @@ void adcensus_util::CostAggregateUpDown(const uint8* img_left, const uint8* img_
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
 				const sint32 xr = x - d;
-				if (xr >= 1 && xr < width - 1) {
+				if (xr > 0 && xr < width - 1) {
 					const ADColor color_r = ADColor(img_right[y * width * 3 + 3 * xr], img_right[y * width * 3 + 3 * xr + 1], img_right[y * width * 3 + 3 * xr + 2]);
 					const ADColor color_last_r = ADColor(img_right[(y - direction) * width * 3 + 3 * xr],
 						img_right[(y - direction) * width * 3 + 3 * xr + 1],
