@@ -10,20 +10,19 @@
 #include "adcensus_types.h"
 #include <algorithm>
 
+/**
+* \brief 交叉十字臂结构
+* 为了限制内存占用，臂长类型设置为uint8，这意味着臂长最长不能超过255
+*/
+struct CrossArm {
+	uint8 left, right, top, bottom;
+	CrossArm() : left(0), right(0), top(0), bottom(0) { }
+};
+
 class CrossAggregator {
 public:
 	CrossAggregator();
 	~CrossAggregator();
-
-	/**
-	 * \brief 交叉十字臂结构
-	 * 为了限制内存占用，臂长类型设置为uint8，这意味着臂长最长不能超过255
-	*/
-	struct CrossArm {
-		uint8 left, right, top, bottom;
-		CrossArm(): left(0), right(0), top(0), bottom(0) { }
-	};
-
 
 	/**
 	 * \brief 初始化代价聚合器
@@ -84,7 +83,7 @@ private:
 	sint32	height_;
 
 	/** \brief 交叉臂 */
-	vector<CrossArm> mat_cross_arms_;
+	vector<CrossArm> vec_cross_arms_;
 
 	/** \brief 影像数据 */
 	const uint8* img_left_;
@@ -96,10 +95,10 @@ private:
 	float32* cost_aggr_;
 
 	/** \brief 临时代价数据 */
-	vector<float32> mat_cost_tmp_;
+	vector<float32> vec_cost_tmp_;
 	/** \brief 支持区像素数量数组 0：水平臂优先 1：竖直臂优先 */
-	vector<uint16> mat_sup_count_[2];
-	vector<uint16> mat_sup_count_tmp_;
+	vector<uint16> vec_sup_count_[2];
+	vector<uint16> vec_sup_count_tmp_;
 
 	sint32	cross_L1_;			// 十字交叉窗口的空间域参数：L1
 	sint32  cross_L2_;			// 十字交叉窗口的空间域参数：L2

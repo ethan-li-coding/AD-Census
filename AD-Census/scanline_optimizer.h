@@ -16,10 +16,30 @@ public:
 	ScanlineOptimizer();
 	~ScanlineOptimizer();
 
+
+	/**
+	 * \brief 设置数据
+	 * \param img_left		// 左影像数据，三通道 
+	 * \param img_right 	// 右影像数据，三通道
+	 * \param cost_init 	// 初始代价数组
+	 * \param cost_aggr 	// 聚合代价数组
+	 */
 	void SetData(const uint8* img_left, const uint8* img_right, float32* cost_init, float32* cost_aggr);
 
+	/**
+	 * \brief 
+	 * \param width			// 影像宽
+	 * \param height		// 影像高
+	 * \param min_disparity	// 最小视差
+	 * \param max_disparity // 最大视差
+	 * \param p1			// p1
+	 * \param p2			// p2
+	 * \param tso			// tso
+	 */
 	void SetParam(const sint32& width,const sint32& height, const sint32& min_disparity, const sint32& max_disparity, const float32& p1, const float32& p2, const sint32& tso);
 
+	/**
+	 * \brief 优化 */
 	void Optimize();
 
 private:

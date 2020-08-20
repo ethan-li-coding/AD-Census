@@ -33,6 +33,9 @@
     <ClInclude Include="scanline_optimizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="multistep_refiner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -41,13 +44,16 @@
     <ClCompile Include="ADCensusStereo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="adcensus_util.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="cross_aggregator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scanline_optimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="adcensus_util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="multistep_refiner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

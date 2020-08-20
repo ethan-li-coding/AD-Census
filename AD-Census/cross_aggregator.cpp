@@ -28,20 +28,20 @@ bool CrossAggregator::Initialize(const sint32& width, const sint32& height)
 	}
 
 	// 为交叉十字臂数组分配内存
-	mat_cross_arms_.clear();
-	mat_cross_arms_.resize(width_*height_);
+	vec_cross_arms_.clear();
+	vec_cross_arms_.resize(width_*height_);
 
 	// 为临时代价数组分配内存
-	mat_cost_tmp_.clear();
-	mat_cost_tmp_.resize(width_*height_);
+	vec_cost_tmp_.clear();
+	vec_cost_tmp_.resize(width_*height_);
 	
 	// 为存储每个像素支持区像素数量的数组分配内存
-	mat_sup_count_[0].clear();
-	mat_sup_count_[0].resize(width_*height_);
-	mat_sup_count_[1].clear();
-	mat_sup_count_[1].resize(width_*height_);
-	mat_sup_count_tmp_.clear();
-	mat_sup_count_tmp_.resize(width_*height_);
+	vec_sup_count_[0].clear();
+	vec_sup_count_[0].resize(width_*height_);
+	vec_sup_count_[1].clear();
+	vec_sup_count_[1].resize(width_*height_);
+	vec_sup_count_tmp_.clear();
+	vec_sup_count_tmp_.resize(width_*height_);
 
 	return true;
 }
@@ -70,14 +70,14 @@ void CrossAggregator::BuildArms()
 	if (width_ <= 0 || height_ <= 0 ||
 		img_left_ == nullptr || img_right_ == nullptr ||
 		cost_init_ == nullptr || cost_aggr_ == nullptr ||
-		mat_cross_arms_.empty()) {
+		vec_cross_arms_.empty()) {
 		return;
 	}
 
 	// 逐像素计算十字交叉臂
 	for (sint32 y = 0; y < height_; y++) {
 		for (sint32 x = 0; x < width_; x++) {
-			CrossArm& arm = mat_cross_arms_[y * width_ + x];
+			CrossArm& arm = vec_cross_arms_[y * width_ + x];
 			FindHorizontalArm(x, y, arm.left, arm.right);
 			FindVerticalArm(x, y, arm.top, arm.bottom);
 		}
@@ -90,7 +90,7 @@ void CrossAggregator::Aggregate(const sint32& num_iters)
 	if (width_ <= 0 || height_ <= 0 ||
 		img_left_ == nullptr || img_right_ == nullptr ||
 		cost_init_ == nullptr || cost_aggr_ == nullptr ||
-		mat_cross_arms_.empty() || mat_cost_tmp_.empty()) {
+		vec_cross_arms_.empty() || vec_cost_tmp_.empty()) {
 		return;
 	}
 	const sint32 disp_range = max_disp_ - min_disp_;
@@ -117,9 +117,9 @@ void CrossAggregator::Aggregate(const sint32& num_iters)
 	}
 }
 
-vector<CrossAggregator::CrossArm>& CrossAggregator::get_arms()
+vector<CrossArm>& CrossAggregator::get_arms()
 {
-	return mat_cross_arms_;
+	return vec_cross_arms_;
 }
 
 void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8& left, uint8& right) const
@@ -271,7 +271,7 @@ void CrossAggregator::ComputeSupPixelCount()
 			for (sint32 y = 0; y < height_; y++) {
 				for (sint32 x = 0; x < width_; x++) {
 					// 获取arm数值
-					auto& arm = mat_cross_arms_[y*width_ + x];
+					auto& arm = vec_cross_arms_[y*width_ + x];
 					sint32 count = 0;
 					if (horizontal_first) {
 						if (k == 0) {
@@ -283,7 +283,7 @@ void CrossAggregator::ComputeSupPixelCount()
 						else {
 							// vertical
 							for (sint32 t = -arm.top; t <= arm.bottom; t++) {
-								count += mat_sup_count_tmp_[(y + t)*width_ + x];
+								count += vec_sup_count_tmp_[(y + t)*width_ + x];
 							}
 						}
 					}
@@ -297,15 +297,15 @@ void CrossAggregator::ComputeSupPixelCount()
 						else {
 							// horizontal
 							for (sint32 t = -arm.left; t <= arm.right; t++) {
-								count += mat_sup_count_tmp_[y*width_ + x + t];
+								count += vec_sup_count_tmp_[y*width_ + x + t];
 							}
 						}
 					}
 					if (k == 0) {
-						mat_sup_count_tmp_[y*width_ + x] = count;
+						vec_sup_count_tmp_[y*width_ + x] = count;
 					}
 					else {
-						mat_sup_count_[id][y*width_ + x] = count;
+						vec_sup_count_[id][y*width_ + x] = count;
 					}
 				}
 			}
@@ -327,7 +327,7 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 		return;
 	}
 
-	memset(&mat_cost_tmp_[0], 0, width_*height_*sizeof(float32));
+	memset(&vec_cost_tmp_[0], 0, width_*height_*sizeof(float32));
 	
 	// 逐像素聚合
 	const sint32 ct_id = horizontal_first ? 0 : 1;
@@ -337,7 +337,7 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 		for (sint32 y = 0; y < height_; y++) {
 			for (sint32 x = 0; x < width_; x++) {
 				// 获取arm数值
-				auto& arm = mat_cross_arms_[y*width_ + x];
+				auto& arm = vec_cross_arms_[y*width_ + x];
 				// 聚合
 				float32 cost = 0.0f;
 				if (horizontal_first) {
@@ -349,7 +349,7 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 					} else {
 						// vertical
 						for (sint32 t = -arm.top; t <= arm.bottom; t++) {
-							cost += mat_cost_tmp_[(y + t)*width_ + x];
+							cost += vec_cost_tmp_[(y + t)*width_ + x];
 						}
 					}
 				}
@@ -362,15 +362,15 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 					} else {
 						// horizontal
 						for (sint32 t = -arm.left; t <= arm.right; t++) {
-							cost += mat_cost_tmp_[y*width_ + x + t];
+							cost += vec_cost_tmp_[y*width_ + x + t];
 						}
 					}
 				}
 				if (k == 0) {
-					mat_cost_tmp_[y*width_ + x] = cost;
+					vec_cost_tmp_[y*width_ + x] = cost;
 				}
 				else {
-					cost_aggr_[y*width_*disp_range + x*disp_range + disp] = cost / mat_sup_count_[ct_id][y*width_ + x];
+					cost_aggr_[y*width_*disp_range + x*disp_range + disp] = cost / vec_sup_count_[ct_id][y*width_ + x];
 				}
 			}
 		}

@@ -7,6 +7,7 @@
 
 #include "adcensus_types.h"
 #include "cross_aggregator.h"
+#include "multistep_refiner.h"
 
 class ADCensusStereo {	
 public:
@@ -66,19 +67,6 @@ private:
 	void Release();
 
 private:
-	//------5小步视差优化------//
-	/** \brief 离群点检测	 */
-	void OutlierDetection();
-	/** \brief 迭代局部投票 */
-	void IterativeRegionVoting();
-	/** \brief 内插填充 */
-	void ProperInterpolation();
-	/** \brief 深度非连续区视差调整 */
-	void DepthDiscontinuityAdjustment();
-	/** \brief 子像素优化 */
-	void SubpixelEnhancement();
-
-private:
 	/** \brief 算法参数	 */
 	ADCensusOption option_;
 
@@ -110,6 +98,8 @@ private:
 
 	/** \brief 代价聚合器	*/
 	CrossAggregator aggregator_;
+	/** \brief 多步优化器	*/
+	MultiStepRefiner refiner_;
 
 	/** \brief 左影像视差图	*/
 	float32* disp_left_;
