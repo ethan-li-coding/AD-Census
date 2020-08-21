@@ -7,7 +7,8 @@
 #include "multistep_refiner.h"
 #include "adcensus_util.h"
 
-MultiStepRefiner::MultiStepRefiner(): width_(0), height_(0), cost_(nullptr), vec_cross_arms_(nullptr),
+MultiStepRefiner::MultiStepRefiner(): width_(0), height_(0), img_left_(nullptr), cost_(nullptr),
+                                      vec_cross_arms_(nullptr),
                                       disp_left_(nullptr), disp_right_(nullptr),
                                       min_disparity_(0), max_disparity_(0),
                                       irv_ts_(0), irv_th_(0), lrcheck_thres_(0),
@@ -33,8 +34,9 @@ bool MultiStepRefiner::Initialize(const sint32& width, const sint32& height)
 	return true;
 }
 
-void MultiStepRefiner::SetData(float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right)
+void MultiStepRefiner::SetData(const uint8* img_left, float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right)
 {
+	img_left_ = img_left;
 	cost_ = cost; 
 	vec_cross_arms_ = cross_arms;
 	disp_left_ = disp_left;
@@ -233,7 +235,7 @@ void MultiStepRefiner::ProperInterpolation()
 	// 最大搜索行程，没有必要搜索过远的像素
 	const sint32 max_search_length = std::max(abs(max_disparity_), abs(min_disparity_));
 
-	std::vector<float32> disp_collects;
+	std::vector<pair<sint32, float32>> disp_collects;
 	for (sint32 k = 0; k < 2; k++) {
 		auto& trg_pixels = (k == 0) ? mismatches_ : occlusions_;
 		if (trg_pixels.empty()) {
@@ -256,12 +258,10 @@ void MultiStepRefiner::ProperInterpolation()
 				for (sint32 m = 1; m < max_search_length; m++) {
 					const sint32 yy = lround(y + m * sina);
 					const sint32 xx = lround(x + m * cosa);
-					if (yy < 0 || yy >= height || xx < 0 || xx >= width) {
-						break;
-					}
-					const auto& disp = *(disp_left_ + yy * width + xx);
-					if (disp != Invalid_Float) {
-						disp_collects.push_back(disp);
+					if (yy < 0 || yy >= height || xx < 0 || xx >= width) { break;}
+					const auto& d = disp_left_[yy * width + xx];
+					if (d != Invalid_Float) {
+						disp_collects.emplace_back(yy * width * 3 + 3 * xx, d);
 						break;
 					}
 				}
@@ -271,20 +271,28 @@ void MultiStepRefiner::ProperInterpolation()
 				continue;
 			}
 
-			std::sort(disp_collects.begin(), disp_collects.end());
-
-			// 如果是误匹配区，则选择中值
-			// 如果是遮挡区，则选择第二小的视差值
+			// 如果是误匹配区，则选择颜色最相近的像素视差值
+			// 如果是遮挡区，则选择最小视差值
 			if (k == 0) {
-				fill_disps[n] = disp_collects[disp_collects.size() / 2];
+				sint32 min_dist = 9999;
+				float32 d = 0.0f;
+				const auto color = ADColor(img_left_[y*width * 3 + 3 * x], img_left_[y*width * 3 + 3 * x + 1], img_left_[y*width * 3 + 3 * x + 2]);
+				for (auto& dc : disp_collects) {
+					const auto color2 = ADColor(img_left_[dc.first], img_left_[dc.first + 1], img_left_[dc.first + 2]);
+					const auto dist = abs(color.r - color2.r) + abs(color.g - color2.g) + abs(color.b - color2.b);
+					if (min_dist > dist) {
+						min_dist = dist;
+						d = dc.second;
+					}
+				}
+				fill_disps[n] = d;
 			}
 			else {
-				if (disp_collects.size() > 1) {
-					fill_disps[n] = disp_collects[1];
+				float32 min_disp = Large_Float;
+				for (auto& dc : disp_collects) {
+					min_disp = std::min(min_disp, dc.second);
 				}
-				else {
-					fill_disps[n] = disp_collects[0];
-				}
+				fill_disps[n] = min_disp;
 			}
 		}
 		for (auto n = 0u; n < trg_pixels.size(); n++) {

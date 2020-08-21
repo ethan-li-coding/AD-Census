@@ -26,12 +26,13 @@ public:
 
 	/**
 	 * \brief 设置多步优化的数据
+	 * \param img_left			// 左影像数据，三通道
 	 * \param cost				// 代价数据
 	 * \param cross_arms		// 十字交叉臂数据
 	 * \param disp_left			// 左视图视差数据
 	 * \param disp_right		// 右视图视差数据
 	 */
-	void SetData(float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right);
+	void SetData(const uint8* img_left, float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right);
 
 
 	/**
@@ -70,6 +71,9 @@ private:
 	sint32	width_;
 	sint32	height_;
 
+	/** \brief 左影像数据（三通道） */
+	const uint8* img_left_;
+	
 	/** \brief 代价数据 */
 	float32* cost_;
 	/** \brief 交叉臂数据 */
