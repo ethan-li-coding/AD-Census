@@ -78,26 +78,33 @@ int main(int argv, char** argc)
 
 	// AD-CensusÆ¥Åä²ÎÊýÉè¼Æ
 	ADCensusOption ad_option;
-	ad_option.do_lr_check = true;
+	// ºòÑ¡ÊÓ²î·¶Î§
+	ad_option.min_disparity = argv < 4 ? 0 : atoi(argc[3]);
+	ad_option.max_disparity = argv < 5 ? 64 : atoi(argc[4]);
+	// Ò»ÖÂÐÔ¼ì²éãÐÖµ
 	ad_option.lrcheck_thres = 1.0f;
+
+	ad_option.do_lr_check = true;
+	ad_option.do_filling = false;
+	
 
 	// ¶¨ÒåAD-CensusÆ¥ÅäÀàÊµÀý
 	ADCensusStereo ad_census;
 
 	printf("AD-Census Initializing...");
-	auto start = std::chrono::steady_clock::now();
+	auto start = steady_clock::now();
 	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
 	// ³õÊ¼»¯
 	if (!ad_census.Initialize(width, height, ad_option)) {
 		std::cout << "AD-Census³õÊ¼»¯Ê§°Ü£¡" << std::endl;
 		return -2;
 	}
-	auto end = std::chrono::steady_clock::now();
-	auto tt = duration_cast<std::chrono::milliseconds>(end - start);
+	auto end = steady_clock::now();
+	auto tt = duration_cast<milliseconds>(end - start);
 	printf("Done! Timing : %lf s\n", tt.count() / 1000.0);
 
-	printf("AD-Census Matching...");
-	start = std::chrono::steady_clock::now();
+	printf("AD-Census Matching...\n");
+	start = steady_clock::now();
 	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//
 	// Æ¥Åä
 	// disparityÊý×é±£´æ×ÓÏñËØµÄÊÓ²î½á¹û
@@ -106,8 +113,8 @@ int main(int argv, char** argc)
 		std::cout << "AD-CensusÆ¥ÅäÊ§°Ü£¡" << std::endl;
 		return -2;
 	}
-	end = std::chrono::steady_clock::now();
-	tt = duration_cast<std::chrono::milliseconds>(end - start);
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
 	printf("Done! Timing : %lf s\n", tt.count() / 1000.0);
 
 	//¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤¡¤//

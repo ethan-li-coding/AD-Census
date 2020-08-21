@@ -8,6 +8,8 @@
 #include <algorithm>
 
 #include "scanline_optimizer.h"
+#include <chrono>
+using namespace std::chrono;
 
 ADCensusStereo::ADCensusStereo(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr),
                                   gray_left_(nullptr), gray_right_(nullptr),
@@ -84,27 +86,63 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	img_left_ = img_left;
 	img_right_ = img_right;
 
+	auto start = steady_clock::now();
+	
 	// 计算灰度图
 	ComputeGray();
 
+	auto end = steady_clock::now();
+	auto tt = duration_cast<milliseconds>(end - start);
+	printf("computing gray! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
+	
 	// Census变换
 	CensusTransform();
+
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("census transforming! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
 
 	// 代价计算
 	ComputeCost();
 
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("computing cost! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
+
 	// 代价聚合
 	CostAggregation();
 
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("cost aggregating! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
+
 	// 扫描线优化
 	ScanlineOptimize();
+
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("scanline optimizing! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
 
 	// 计算左右视图视差
 	ComputeDisparity();
 	ComputeDisparityRight();
 
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("computing disparities! timing : %lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
+
 	// 多步骤视差优化
 	MultiStepRefine();
+
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("multistep refining! timing : %lf s\n", tt.count() / 1000.0);
 
 	// 输出视差图
 	memcpy(disp_left, disp_left_, height_ * width_ * sizeof(float32));
