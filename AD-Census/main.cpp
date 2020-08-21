@@ -85,7 +85,7 @@ int main(int argv, char** argc)
 	ad_option.lrcheck_thres = 1.0f;
 
 	ad_option.do_lr_check = true;
-	ad_option.do_filling = false;
+	ad_option.do_filling = true;
 	
 
 	// 定义AD-Census匹配类实例
