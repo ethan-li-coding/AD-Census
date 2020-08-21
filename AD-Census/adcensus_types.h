@@ -57,18 +57,21 @@ struct ADCensusOption {
 	sint32	so_tso;				// 扫描线优化参数tso
 	sint32	irv_ts;				// Iterative Region Voting法参数ts
 	float32 irv_th;				// Iterative Region Voting法参数th
-
-	bool	is_check_lr;		// 是否检查左右一致性
+	
 	float32	lrcheck_thres;		// 左右一致性约束阈值
 
+	bool	do_lr_check;					// 是否检查左右一致性
+	bool	do_filling;						// 是否做视差填充
+	bool	do_discontinuity_adjustment;	// 是否做非连续区调整
+	
 	ADCensusOption(): min_disparity(0), max_disparity(64),
 	                  lambda_ad(10), lambda_census(30),
 	                  cross_L1(34), cross_L2(17),
 	                  cross_t1(20), cross_t2(6),
 	                  so_p1(1.0f), so_p2(3.0f),
 	                  so_tso(15), irv_ts(20), irv_th(0.4f),
-	                  is_check_lr(true),
-	                  lrcheck_thres(1.0f) {} ;
+	                  lrcheck_thres(1.0f),
+					  do_lr_check(true), do_filling(true), do_discontinuity_adjustment(false) {} ;
 };
 
 /**

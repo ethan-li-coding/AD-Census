@@ -5,15 +5,17 @@
 */
 
 #include "multistep_refiner.h"
+#include "adcensus_util.h"
 
-MultiStepRefiner::MultiStepRefiner()
-{
-	
-}
+MultiStepRefiner::MultiStepRefiner(): width_(0), height_(0), cost_(nullptr), vec_cross_arms_(nullptr),
+                                      disp_left_(nullptr), disp_right_(nullptr),
+                                      min_disparity_(0), max_disparity_(0),
+                                      irv_ts_(0), irv_th_(0), lrcheck_thres_(0),
+                                      do_lr_check_(false), do_region_voting_(false),
+                                      do_interpolating_(false), do_discontinuity_adjustment_(false) { }
 
 MultiStepRefiner::~MultiStepRefiner()
 {
-	
 }
 
 bool MultiStepRefiner::Initialize(const sint32& width, const sint32& height)
@@ -24,10 +26,14 @@ bool MultiStepRefiner::Initialize(const sint32& width, const sint32& height)
 		return false;
 	}
 
+	// 初始化边缘数据
+	vec_edge_left_.clear();
+	vec_edge_left_.resize(width*height);
+	
 	return true;
 }
 
-void MultiStepRefiner::SetData(const float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right)
+void MultiStepRefiner::SetData(float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right)
 {
 	cost_ = cost; 
 	vec_cross_arms_ = cross_arms;
@@ -35,13 +41,18 @@ void MultiStepRefiner::SetData(const float32* cost, const vector<CrossArm>* cros
 	disp_right_= disp_right;
 }
 
-void MultiStepRefiner::SetParam(const sint32& min_disparity, const sint32& max_disparity, const sint32& irv_ts, const float32& irv_th, const float32& lrcheck_thres)
+void MultiStepRefiner::SetParam(const sint32& min_disparity, const sint32& max_disparity, const sint32& irv_ts, const float32& irv_th, const float32& lrcheck_thres,
+								const bool& do_lr_check, const bool& do_region_voting, const bool& do_interpolating, const bool& do_discontinuity_adjustment)
 {
 	min_disparity_ = min_disparity;
 	max_disparity_ = max_disparity;
 	irv_ts_ = irv_ts;
 	irv_th_ = irv_th;
 	lrcheck_thres_ = lrcheck_thres;
+	do_lr_check_ = do_lr_check;
+	do_region_voting_ = do_region_voting;
+	do_interpolating_ = do_interpolating;
+	do_discontinuity_adjustment_ = do_discontinuity_adjustment;
 }
 
 void MultiStepRefiner::Refine()
@@ -53,11 +64,24 @@ void MultiStepRefiner::Refine()
 	}
 
 	// step1: outlier detection
-	OutlierDetection();
+	if (do_lr_check_) {
+		OutlierDetection();
+	}
 	// step2: iterative region voting
-	IterativeRegionVoting();
+	if (do_region_voting_) {
+		IterativeRegionVoting();
+	}
 	// step3: proper interpolation
-	ProperInterpolation();
+	if (do_interpolating_) {
+		ProperInterpolation();
+	}
+	// step4: discontinuities adjustment
+	if (do_discontinuity_adjustment_) {
+		DepthDiscontinuityAdjustment();
+	}
+
+	// median filter
+	adcensus_util::MedianFilter(disp_left_, disp_left_, width_, height_, 3);
 }
 
 
@@ -205,23 +229,17 @@ void MultiStepRefiner::ProperInterpolation()
 	const sint32 width = width_;
 	const sint32 height = height_;
 
-	std::vector<float32> disp_collects;
-
-	// 定义8个方向
 	const float32 pi = 3.1415926f;
-	float32 angle1[8] = { pi, 3 * pi / 4, pi / 2, pi / 4, 0, 7 * pi / 4, 3 * pi / 2, 5 * pi / 4 };
-	float32 angle2[8] = { pi, 5 * pi / 4, 3 * pi / 2, 7 * pi / 4, 0, pi / 4, pi / 2, 3 * pi / 4 };
-	float32* angle = angle1;
 	// 最大搜索行程，没有必要搜索过远的像素
-	const sint32 max_search_length = 2.0 * std::max(abs(max_disparity_), abs(min_disparity_));
+	const sint32 max_search_length = std::max(abs(max_disparity_), abs(min_disparity_));
 
+	std::vector<float32> disp_collects;
 	for (sint32 k = 0; k < 2; k++) {
 		auto& trg_pixels = (k == 0) ? mismatches_ : occlusions_;
 		if (trg_pixels.empty()) {
 			continue;
 		}
 		std::vector<float32> fill_disps(trg_pixels.size());
-		std::vector<std::pair<sint32, sint32>> inv_pixels;
 
 		// 遍历待处理像素
 		for (auto n = 0u; n < trg_pixels.size(); n++) {
@@ -229,12 +247,12 @@ void MultiStepRefiner::ProperInterpolation()
 			const sint32 x = pix.first;
 			const sint32 y = pix.second;
 
-			// 收集8个方向上遇到的首个有效视差值
+			// 收集16个方向上遇到的首个有效视差值
 			disp_collects.clear();
-			for (sint32 s = 0; s < 8; s++) {
-				const float32 ang = angle[s];
-				const float32 sina = float32(sin(ang));
-				const float32 cosa = float32(cos(ang));
+			double ang = 0.0;
+			for (sint32 s = 0; s < 16; s++) {
+				const auto sina = sin(ang);
+				const auto cosa = cos(ang);
 				for (sint32 m = 1; m < max_search_length; m++) {
 					const sint32 yy = lround(y + m * sina);
 					const sint32 xx = lround(x + m * cosa);
@@ -247,6 +265,7 @@ void MultiStepRefiner::ProperInterpolation()
 						break;
 					}
 				}
+				ang += pi / 16;
 			}
 			if (disp_collects.empty()) {
 				continue;
@@ -279,5 +298,68 @@ void MultiStepRefiner::ProperInterpolation()
 
 void MultiStepRefiner::DepthDiscontinuityAdjustment()
 {
+	const sint32 width = width_;
+	const sint32 height = height_;
+	const auto disp_range = max_disparity_ - min_disparity_;
+	if (disp_range <= 0) {
+		return;
+	}
+	
+	// 对视差图做边缘检测
+	// 边缘检测的方法是灵活的，这里选择sobel算子
+	const float32 edge_thres = 5.0f;
+	EdgeDetect(&vec_edge_left_[0], disp_left_, width, height, edge_thres);
 
+	// 调整边缘像素的视差
+	for (sint32 y = 0; y < height; y++) {
+		for (sint32 x = 1; x < width - 1; x++) {
+			const auto& e_label = vec_edge_left_[y*width + x];
+			if (e_label == 1) {
+				const auto disp_ptr = disp_left_ + y*width;
+				float32& d = disp_ptr[x];
+				if (d != Invalid_Float) {
+					const sint32& di = lround(d);
+					const auto cost_ptr = cost_ + y*width*disp_range + x*disp_range;
+					float32 c0 = cost_ptr[di];
+
+					// 记录左右两边像素的视差值和代价值
+					// 选择代价最小的像素视差值
+					bool adjust = false;
+					for (int k = 0; k<2; k++) {
+						const sint32 x2 = (k == 0) ? x - 1 : x + 1;
+						const float32& d2 = disp_ptr[x2];
+						const sint32& d2i = lround(d2);
+						if (d2 != Invalid_Float) {
+							const auto& c = (k == 0) ? cost_ptr[-disp_range + d2i] : cost_ptr[disp_range + d2i];
+							if (c < c0) {
+								d = d2;
+								c0 = c;
+								adjust = true;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+}
+
+void MultiStepRefiner::EdgeDetect(uint8* edge_mask, const float32* disp_ptr, const sint32& width, const sint32& height, const float32 threshold)
+{
+	memset(edge_mask, 0, width*height * sizeof(uint8));
+	// sobel算子
+	for (int y = 1; y < height - 1; y++) {
+		for (int x = 1; x < width - 1; x++) {
+			const auto grad_x = (-disp_ptr[(y - 1) * width + x - 1] + disp_ptr[(y - 1) * width + x + 1]) +
+				(-2 * disp_ptr[y * width + x - 1] + 2 * disp_ptr[y * width + x + 1]) +
+				(-disp_ptr[(y + 1) * width + x - 1] + disp_ptr[(y + 1) * width + x + 1]);
+			const auto grad_y = (-disp_ptr[(y - 1) * width + x - 1] - 2 * disp_ptr[(y - 1) * width + x] - disp_ptr[(y - 1) * width + x + 1]) +
+				(disp_ptr[(y + 1) * width + x - 1] + 2 * disp_ptr[(y + 1) * width + x] + disp_ptr[(y + 1) * width + x + 1]);
+			const auto grad = abs(grad_x) + abs(grad_y);
+			if (grad > threshold) {
+				edge_mask[y*width + x] = 1;
+			}
+		}
+	}
 }

@@ -78,7 +78,7 @@ int main(int argv, char** argc)
 
 	// AD-Census匹配参数设计
 	ADCensusOption ad_option;
-	ad_option.is_check_lr = false;
+	ad_option.do_lr_check = true;
 	ad_option.lrcheck_thres = 1.0f;
 
 	// 定义AD-Census匹配类实例

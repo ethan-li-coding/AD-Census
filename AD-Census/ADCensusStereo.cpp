@@ -241,7 +241,8 @@ void ADCensusStereo::MultiStepRefine()
 	// 设置多步优化器数据
 	refiner_.SetData(cost_aggr_, &aggregator_.get_arms(), disp_left_, disp_right_);
 	// 设置多步优化器参数
-	refiner_.SetParam(option_.min_disparity, option_.max_disparity, option_.irv_ts, option_.irv_th, option_.lrcheck_thres);
+	refiner_.SetParam(option_.min_disparity, option_.max_disparity, option_.irv_ts, option_.irv_th, option_.lrcheck_thres,
+					  option_.do_lr_check,option_.do_filling,option_.do_filling, option_.do_discontinuity_adjustment);
 	// 多步优化
 	refiner_.Refine();
 }

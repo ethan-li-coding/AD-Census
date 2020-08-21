@@ -21,4 +21,14 @@ namespace adcensus_util
 	void census_transform_9x7(const uint8* source, uint64* census, const sint32& width, const sint32& height);
 	// Hamming距离
 	uint8 Hamming64(const uint64& x, const uint64& y);
+
+	/**
+	* \brief 中值滤波
+	* \param in				输入，源数据
+	* \param out			输出，目标数据
+	* \param width			输入，宽度
+	* \param height			输入，高度
+	* \param wnd_size		输入，窗口宽度
+	*/
+	void MedianFilter(const float32* in, float32* out, const sint32& width, const sint32& height, const sint32 wnd_size);
 }

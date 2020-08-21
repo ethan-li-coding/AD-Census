@@ -52,3 +52,33 @@ uint8 adcensus_util::Hamming64(const uint64& x, const uint64& y)
 
 	return static_cast<uint8>(dist);
 }
+
+void adcensus_util::MedianFilter(const float32* in, float32* out, const sint32& width, const sint32& height, const sint32 wnd_size)
+{
+	const sint32 radius = wnd_size / 2;
+	const sint32 size = wnd_size * wnd_size;
+	
+	std::vector<float32> wnd_data;
+	wnd_data.reserve(size);
+
+	for (sint32 y = 0; y < height; y++) {
+		for (sint32 x = 0; x < width; x++) {
+			wnd_data.clear();
+			for (sint32 r = -radius; r <= radius; r++) {
+				for (sint32 c = -radius; c <= radius; c++) {
+					const sint32 row = y + r;
+					const sint32 col = x + c;
+					if (row >= 0 && row < height && col >= 0 && col < width) {
+						if (in[row * width + col] != Invalid_Float) {
+							wnd_data.push_back(in[row * width + col]);
+						}
+					}
+				}
+			}
+			std::sort(wnd_data.begin(), wnd_data.end());
+			if (!wnd_data.empty()) {
+				out[y * width + x] = wnd_data[wnd_data.size() / 2];
+			}
+		}
+	}
+}

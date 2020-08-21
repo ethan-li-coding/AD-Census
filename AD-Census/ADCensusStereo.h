@@ -106,11 +106,6 @@ private:
 	/** \brief 右影像视差图	*/
 	float32* disp_right_;
 
-	/** \brief 遮挡区像素集	*/
-	std::vector<std::pair<int, int>> occlusions_;
-	/** \brief 误匹配区像素集	*/
-	std::vector<std::pair<int, int>> mismatches_;
-
 	/** \brief 是否初始化标志	*/
 	bool is_initialized_;
 };
