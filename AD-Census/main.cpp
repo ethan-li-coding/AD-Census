@@ -1,6 +1,6 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
 * Author	: Ethan Li <ethan.li.whu@gmail.com>
-*			  https://github.com/ethan-li-coding
+* https://github.com/ethan-li-coding/AD-Census
 * Describe	: main
 */
 #include <iostream>
@@ -28,7 +28,7 @@ void SaveDisparityCloud(const uint8* img_bytes, const float32* disp_map, const s
 * \param argv 3
 * \param argc argc[1]:左影像路径 argc[2]: 右影像路径 argc[3]: 最小视差[可选，默认0] argc[4]: 最大视差[可选，默认64]
 * \param eg. ..\Data\cone\im2.png ..\Data\cone\im6.png 0 64
-* \param eg. ..\Data\Reindeer\view1.png ..\Data\Reindeer\view5.png 0 128
+* \param eg. ..\Data\Cloth3\view1.png ..\Data\Cloth3\view5.png 0 128
 * \return
 */
 int main(int argv, char** argc)
