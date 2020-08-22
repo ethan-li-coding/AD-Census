@@ -147,7 +147,8 @@ void ScanlineOptimizer::CostAggregateLeftRight(const float32* cost_so_src, float
 				const float32 l3 = cost_last_path[d + 2] + P1;
 				const float32 l4 = mincost_last_path + P2;
 
-				const float32 cost_s = cost + static_cast<float32>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
+				float32 cost_s = cost + static_cast<float32>(std::min(std::min(l1, l2), std::min(l3, l4)));
+				cost_s /= 2;
 
 				cost_aggr_row[d] = cost_s;
 				min_cost = std::min(min_cost, cost_s);
@@ -254,7 +255,8 @@ void ScanlineOptimizer::CostAggregateUpDown(const float32* cost_so_src, float32*
 				const float32 l3 = cost_last_path[d + 2] + P1;
 				const float32 l4 = mincost_last_path + P2;
 
-				const float32 cost_s = cost + static_cast<float32>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
+				float32 cost_s = cost + static_cast<float32>(std::min(std::min(l1, l2), std::min(l3, l4)));
+				cost_s /= 2;
 
 				cost_aggr_col[d] = cost_s;
 				min_cost = std::min(min_cost, cost_s);
