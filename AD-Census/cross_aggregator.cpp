@@ -32,9 +32,11 @@ bool CrossAggregator::Initialize(const sint32& width, const sint32& height)
 	vec_cross_arms_.resize(width_*height_);
 
 	// 为临时代价数组分配内存
-	vec_cost_tmp_.clear();
-	vec_cost_tmp_.resize(width_*height_);
-	
+	vec_cost_tmp_[0].clear();
+	vec_cost_tmp_[0].resize(width_*height_);
+	vec_cost_tmp_[1].clear();
+	vec_cost_tmp_[1].resize(width_ * height_);
+
 	// 为存储每个像素支持区像素数量的数组分配内存
 	vec_sup_count_[0].clear();
 	vec_sup_count_[0].resize(width_*height_);
@@ -90,7 +92,7 @@ void CrossAggregator::Aggregate(const sint32& num_iters)
 	if (width_ <= 0 || height_ <= 0 ||
 		img_left_ == nullptr || img_right_ == nullptr ||
 		cost_init_ == nullptr || cost_aggr_ == nullptr ||
-		vec_cross_arms_.empty() || vec_cost_tmp_.empty()) {
+		vec_cross_arms_.empty() || vec_cost_tmp_[0].empty()|| vec_cost_tmp_[1].empty()) {
 		return;
 	}
 	const sint32 disp_range = max_disp_ - min_disp_;
@@ -327,8 +329,14 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 		return;
 	}
 
-	memset(&vec_cost_tmp_[0], 0, width_*height_*sizeof(float32));
-	
+	// 将disp层的代价存入临时数组vec_cost_tmp_[0]
+	// 这样可以避免过多的访问更大的cost_aggr_,提高访问效率
+	for (sint32 y = 0; y < height_; y++) {
+		for (sint32 x = 0; x < width_; x++) {
+			vec_cost_tmp_[0][y * width_ + x] = cost_aggr_[y * width_ * disp_range + x * disp_range + disp];
+		}
+	}
+
 	// 逐像素聚合
 	const sint32 ct_id = horizontal_first ? 0 : 1;
 	for (sint32 k = 0; k < 2; k++) {
@@ -344,12 +352,12 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 					if (k == 0) {
 						// horizontal
 						for (sint32 t = -arm.left; t <= arm.right; t++) {
-							cost += cost_aggr_[y*width_*disp_range + (x + t)*disp_range + disp];
+							cost += vec_cost_tmp_[0][y * width_ + x + t];
 						}
 					} else {
 						// vertical
 						for (sint32 t = -arm.top; t <= arm.bottom; t++) {
-							cost += vec_cost_tmp_[(y + t)*width_ + x];
+							cost += vec_cost_tmp_[1][(y + t)*width_ + x];
 						}
 					}
 				}
@@ -357,17 +365,17 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 					if (k == 0) {
 						// vertical
 						for (sint32 t = -arm.top; t <= arm.bottom; t++) {
-							cost += cost_aggr_[(y + t)*width_*disp_range + x*disp_range + disp];
+							cost += vec_cost_tmp_[0][(y + t) * width_ + x];
 						}
 					} else {
 						// horizontal
 						for (sint32 t = -arm.left; t <= arm.right; t++) {
-							cost += vec_cost_tmp_[y*width_ + x + t];
+							cost += vec_cost_tmp_[1][y*width_ + x + t];
 						}
 					}
 				}
 				if (k == 0) {
-					vec_cost_tmp_[y*width_ + x] = cost;
+					vec_cost_tmp_[1][y*width_ + x] = cost;
 				}
 				else {
 					cost_aggr_[y*width_*disp_range + x*disp_range + disp] = cost / vec_sup_count_[ct_id][y*width_ + x];

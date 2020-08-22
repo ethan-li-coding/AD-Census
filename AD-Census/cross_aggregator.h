@@ -95,7 +95,7 @@ private:
 	float32* cost_aggr_;
 
 	/** \brief 临时代价数据 */
-	vector<float32> vec_cost_tmp_;
+	vector<float32> vec_cost_tmp_[2];
 	/** \brief 支持区像素数量数组 0：水平臂优先 1：竖直臂优先 */
 	vector<uint16> vec_sup_count_[2];
 	vector<uint16> vec_sup_count_tmp_;
