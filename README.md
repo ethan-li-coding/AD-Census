@@ -39,7 +39,7 @@ opencv310
 为便于移植，算法是不依赖任何图像库的，只在算法实验部分调用opencv库读取和显示图像，也可替换成其他图像库
 
 ## 论文
-Mei X , Sun X , Zhou M , et al. On building an accurate stereo matching system on graphics hardware[C]// IEEE International Conference on Computer Vision Workshops. IEEE, 2012.
+Mei X , Sun X , Zhou M , et al. <b>On building an accurate stereo matching system on graphics hardware</b>[C]// IEEE International Conference on Computer Vision Workshops. IEEE, 2012.
 
 ## Github图片不显示的解决办法
 修改hosts
