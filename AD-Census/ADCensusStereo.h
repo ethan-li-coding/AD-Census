@@ -6,7 +6,9 @@
 #pragma once
 
 #include "adcensus_types.h"
+#include "cost_computor.h"
 #include "cross_aggregator.h"
+#include "scanline_optimizer.h"
 #include "multistep_refiner.h"
 
 class ADCensusStereo {	
@@ -39,71 +41,53 @@ public:
 	bool Reset(const uint32& width, const uint32& height, const ADCensusOption& option);
 
 private:
-	/** \brief 计算灰度数据 */
-	void ComputeGray() const;
+	/** \brief 代价计算 */
+	void ComputeCost();
 
-	/** \brief Census变换 */
-	void CensusTransform() const;
-
-	/** \brief 代价计算	 */
-	void ComputeCost() const;
-
-	/** \brief 代价聚合	 */
+	/** \brief 代价聚合 */
 	void CostAggregation();
 
 	/** \brief 扫描线优化	 */
-	void ScanlineOptimize() const;
+	void ScanlineOptimize();
 
-	/** \brief 多步骤视差优化	 */
+	/** \brief 多步骤视差优化	*/
 	void MultiStepRefine();
 
-	/** \brief 视差计算（左视图） */
-	void ComputeDisparity() const;
+	/** \brief 视差计算（左视图）*/
+	void ComputeDisparity();
 
-	/** \brief 视差计算（右视图） */
-	void ComputeDisparityRight() const;
+	/** \brief 视差计算（右视图）*/
+	void ComputeDisparityRight();
 
-	/** \brief 内存释放	 */
+	/** \brief 内存释放 */
 	void Release();
 
 private:
-	/** \brief 算法参数	 */
+	/** \brief 算法参数 */
 	ADCensusOption option_;
 
-	/** \brief 影像宽	 */
+	/** \brief 影像宽 */
 	sint32 width_;
-
-	/** \brief 影像高	 */
+	/** \brief 影像高 */
 	sint32 height_;
 
-	/** \brief 左影像数据，3通道彩色数据	 */
+	/** \brief 左影像数据，3通道彩色数据 */
 	const uint8* img_left_;
 	/** \brief 右影像数据	，3通道彩色数据 */
 	const uint8* img_right_;
 
-	/** \brief 左影像灰度数据	 */
-	uint8* gray_left_;
-	/** \brief 右影像灰度数据	 */
-	uint8* gray_right_;
-
-	/** \brief 左影像census值	*/
-	uint64* census_left_;
-	/** \brief 右影像census值	*/
-	uint64* census_right_;
-
-	/** \brief 初始匹配代价	*/
-	float32* cost_init_;
-	/** \brief 聚合匹配代价	*/
-	float32* cost_aggr_;
-
-	/** \brief 代价聚合器	*/
+	/** \brief 代价计算器 */
+	CostComputor cost_computer_;
+	/** \brief 代价聚合器 */
 	CrossAggregator aggregator_;
-	/** \brief 多步优化器	*/
+	/** \brief 扫描线优化器 */
+	ScanlineOptimizer scan_line;
+	/** \brief 多步优化器 */
 	MultiStepRefiner refiner_;
 
-	/** \brief 左影像视差图	*/
+	/** \brief 左影像视差图 */
 	float32* disp_left_;
-	/** \brief 右影像视差图	*/
+	/** \brief 右影像视差图 */
 	float32* disp_right_;
 
 	/** \brief 是否初始化标志	*/

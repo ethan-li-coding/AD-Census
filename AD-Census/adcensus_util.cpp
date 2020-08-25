@@ -7,10 +7,9 @@
 #include "adcensus_util.h"
 #include <cassert>
 
-void adcensus_util::census_transform_9x7(const uint8* source, uint64* census, const sint32& width,
-	const sint32& height)
+void adcensus_util::census_transform_9x7(const uint8* source, vector<uint64>& census, const sint32& width, const sint32& height)
 {
-	if (source == nullptr || census == nullptr || width <= 9 || height <= 7) {
+	if (source == nullptr || census.empty() || width <= 9 || height <= 7) {
 		return;
 	}
 

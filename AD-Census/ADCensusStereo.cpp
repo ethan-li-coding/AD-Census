@@ -4,17 +4,11 @@
 * Describe	: implement of ad-census stereo class
 */
 #include "ADCensusStereo.h"
-#include "adcensus_util.h"
 #include <algorithm>
-
-#include "scanline_optimizer.h"
 #include <chrono>
 using namespace std::chrono;
 
 ADCensusStereo::ADCensusStereo(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr),
-                                  gray_left_(nullptr), gray_right_(nullptr),
-                                  census_left_(nullptr), census_right_(nullptr),
-                                  cost_init_(nullptr), cost_aggr_(nullptr), 
                                   disp_left_(nullptr), disp_right_(nullptr),
                                   is_initialized_(false) { }
 
@@ -39,37 +33,35 @@ bool ADCensusStereo::Initialize(const sint32& width, const sint32& height, const
 	}
 
 	//··· 开辟内存空间
-	const sint32 img_size = width * height;
-	const sint32 disp_range = option.max_disparity - option.min_disparity;
+	const sint32 img_size = width_ * height_;
+	const sint32 disp_range = option_.max_disparity - option_.min_disparity;
 	if (disp_range <= 0) {
 		return false;
 	}
 
-	// 灰度数据
-	gray_left_ = new uint8[img_size];
-	gray_right_ = new uint8[img_size];
-	// census数据（左右影像）
-	census_left_ = new uint64[img_size]();
-	census_right_ = new uint64[img_size]();
-	// 代价数据
-	cost_init_ = new float32[img_size*disp_range];
-	cost_aggr_ = new float32[img_size*disp_range];
-
 	// 视差图
 	disp_left_ = new float32[img_size];
 	disp_right_ = new float32[img_size];
-	
+
 	// 初始化代价计算器
-	if(!aggregator_.Initialize(width_, height_)) {
-		return false;
+	if(!cost_computer_.Initialize(width_,height_,option_.min_disparity,option_.max_disparity)) {
+		is_initialized_ = false;
+		return is_initialized_;
 	}
 
-	// 初始化多步优化计算器
+	// 初始化代价聚合器
+	if(!aggregator_.Initialize(width_, height_,option_.min_disparity,option_.max_disparity)) {
+		is_initialized_ = false;
+		return is_initialized_;
+	}
+
+	// 初始化多步优化器
 	if (!refiner_.Initialize(width_, height_)) {
-		return false;
+		is_initialized_ = false;
+		return is_initialized_;
 	}
 
-	is_initialized_ = gray_left_ && gray_right_ && cost_init_ && cost_aggr_  && disp_left_ && disp_right_;
+	is_initialized_ = disp_left_ && disp_right_;
 
 	return is_initialized_;
 }
@@ -79,7 +71,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	if (!is_initialized_) {
 		return false;
 	}
-	if (img_left == nullptr || img_right == nullptr) {
+	if (img_left == nullptr || img_right == nullptr || disp_left == nullptr) {
 		return false;
 	}
 
@@ -87,28 +79,12 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	img_right_ = img_right;
 
 	auto start = steady_clock::now();
-	
-	// 计算灰度图
-	ComputeGray();
-
-	auto end = steady_clock::now();
-	auto tt = duration_cast<milliseconds>(end - start);
-	printf("computing gray! timing : %lf s\n", tt.count() / 1000.0);
-	start = steady_clock::now();
-	
-	// Census变换
-	CensusTransform();
-
-	end = steady_clock::now();
-	tt = duration_cast<milliseconds>(end - start);
-	printf("census transforming! timing : %lf s\n", tt.count() / 1000.0);
-	start = steady_clock::now();
 
 	// 代价计算
 	ComputeCost();
 
-	end = steady_clock::now();
-	tt = duration_cast<milliseconds>(end - start);
+	auto end = steady_clock::now();
+	auto tt = duration_cast<milliseconds>(end - start);
 	printf("computing cost! timing : %lf s\n", tt.count() / 1000.0);
 	start = steady_clock::now();
 
@@ -162,112 +138,31 @@ bool ADCensusStereo::Reset(const uint32& width, const uint32& height, const ADCe
 	return Initialize(width, height, option);
 }
 
-void ADCensusStereo::ComputeGray() const
+
+void ADCensusStereo::ComputeCost()
 {
-	const sint32 width = width_;
-	const sint32 height = height_;
-	if (width <= 0 || height <= 0 ||
-		img_left_ == nullptr || img_right_ == nullptr ||
-		gray_left_ == nullptr || gray_right_ == nullptr) {
-		return;
-	}
-
-	// 彩色转灰度
-	for (sint32 n = 0; n < 2; n++) {
-		auto* color = (n == 0) ? img_left_ : img_right_;
-		auto* gray = (n == 0) ? gray_left_ : gray_right_;
-		for (sint32 i = 0; i < height; i++) {
-			for (sint32 j = 0; j < width; j++) {
-				const auto b = color[i * width * 3 + 3 * j];
-				const auto g = color[i * width * 3 + 3 * j + 1];
-				const auto r = color[i * width * 3 + 3 * j + 2];
-				gray[i * width + j] = uint8(r * 0.299 + g * 0.587 + b * 0.114);
-			}
-		}
-	}
-}
-
-void ADCensusStereo::CensusTransform() const
-{
-	const sint32 width = width_;
-	const sint32 height = height_;
-	if (width <= 0 || height <= 0 ||
-		gray_left_ == nullptr || gray_right_ == nullptr ||
-		census_left_ == nullptr || census_right_ == nullptr) {
-		return;
-	}
-	// 左右影像census变换
-	adcensus_util::census_transform_9x7(gray_left_, census_left_, width, height);
-	adcensus_util::census_transform_9x7(gray_right_, census_right_, width, height);
-}
-
-void ADCensusStereo::ComputeCost() const
-{
-	const sint32& min_disparity = option_.min_disparity;
-	const sint32& max_disparity = option_.max_disparity;
-	const sint32 width = width_;
-	const sint32 height = height_;
-	const sint32 disp_range = max_disparity - min_disparity;
-	if (disp_range <= 0 || width <= 0 || height <= 0 ||
-		img_left_ == nullptr || img_right_ == nullptr || 
-		census_left_ == nullptr || census_right_ == nullptr) {
-		return;
-	}
-
-	// 预设参数
-	const auto lambda_ad = option_.lambda_ad;
-	const auto lambda_census = option_.lambda_census;
-
+	// 设置代价计算器数据
+	cost_computer_.SetData(img_left_, img_right_);
+	// 设置代价计算器参数
+	cost_computer_.SetParams(option_.lambda_ad, option_.lambda_census);
 	// 计算代价
-	for (sint32 i = 0; i < height; i++) {
-		for (sint32 j = 0; j < width; j++) {
-			const auto bl = img_left_[i*width * 3 + 3*j];
-			const auto gl = img_left_[i*width * 3 + 3*j + 1];
-			const auto rl = img_left_[i*width * 3 + 3*j + 2];
-			const auto& census_val_l = census_left_[i * width_ + j];
-			// 逐视差计算代价值
-			for (sint32 d = min_disparity; d < max_disparity; d++) {
-				auto& cost = cost_init_[i * width_ * disp_range + j * disp_range + (d - min_disparity)];
-				const sint32 jr = j - d;
-				if (jr < 0 || jr >= width_) {
-					cost = 1.0f;
-					continue;
-				}
-
-				// ad代价
-				const auto br = img_right_[i*width * 3 + 3 * jr];
-				const auto gr = img_right_[i*width * 3 + 3 * jr + 1];
-				const auto rr = img_right_[i*width * 3 + 3 * jr + 2];
-				const float32 cost_ad = (abs(bl - br) + abs(gl - gr) + abs(rl - rr)) / 3.0f;
-
-				// census代价
-				const auto& census_val_r = census_right_[i * width_ + jr];
-				const auto cost_census = static_cast<float32>(adcensus_util::Hamming64(census_val_l, census_val_r));
-
-				// ad-census代价
-				cost = 1 - exp(-cost_ad / lambda_ad) + 1 - exp(-cost_census / lambda_census);
-			}
-		}
-	}
+	cost_computer_.Compute();
 }
 
 void ADCensusStereo::CostAggregation()
 {
 	// 设置聚合器数据
-	aggregator_.SetData(img_left_, img_right_, cost_init_, cost_aggr_);
+	aggregator_.SetData(img_left_, img_right_, cost_computer_.get_cost_ptr());
 	// 设置聚合器参数
-	aggregator_.SetParams(option_.cross_L1, option_.cross_L2, option_.cross_t1, option_.cross_t2, option_.min_disparity, option_.max_disparity);
-	// 聚合器计算聚合臂
-	aggregator_.BuildArms();
+	aggregator_.SetParams(option_.cross_L1, option_.cross_L2, option_.cross_t1, option_.cross_t2);
 	// 代价聚合
 	aggregator_.Aggregate(4);
 }
 
-void ADCensusStereo::ScanlineOptimize() const
+void ADCensusStereo::ScanlineOptimize()
 {
-	ScanlineOptimizer scan_line;
 	// 设置优化器数据
-	scan_line.SetData(img_left_, img_right_, cost_init_, cost_aggr_);
+	scan_line.SetData(img_left_, img_right_, cost_computer_.get_cost_ptr(), aggregator_.get_cost_ptr());
 	// 设置优化器参数
 	scan_line.SetParam(width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso);
 	// 扫描线优化
@@ -277,7 +172,7 @@ void ADCensusStereo::ScanlineOptimize() const
 void ADCensusStereo::MultiStepRefine()
 {
 	// 设置多步优化器数据
-	refiner_.SetData(img_left_, cost_aggr_, &aggregator_.get_arms(), disp_left_, disp_right_);
+	refiner_.SetData(img_left_, aggregator_.get_cost_ptr(), aggregator_.get_arms_ptr(), disp_left_, disp_right_);
 	// 设置多步优化器参数
 	refiner_.SetParam(option_.min_disparity, option_.max_disparity, option_.irv_ts, option_.irv_th, option_.lrcheck_thres,
 					  option_.do_lr_check,option_.do_filling,option_.do_filling, option_.do_discontinuity_adjustment);
@@ -285,7 +180,7 @@ void ADCensusStereo::MultiStepRefine()
 	refiner_.Refine();
 }
 
-void ADCensusStereo::ComputeDisparity() const
+void ADCensusStereo::ComputeDisparity()
 {
 	const sint32& min_disparity = option_.min_disparity;
 	const sint32& max_disparity = option_.max_disparity;
@@ -297,7 +192,7 @@ void ADCensusStereo::ComputeDisparity() const
 	// 左影像视差图
 	const auto disparity = disp_left_;
 	// 左影像聚合代价数组
-	const auto cost_ptr = cost_aggr_;
+	const auto cost_ptr = aggregator_.get_cost_ptr();
 
 	const sint32 width = width_;
 	const sint32 height = height_;
@@ -342,7 +237,7 @@ void ADCensusStereo::ComputeDisparity() const
 	}
 }
 
-void ADCensusStereo::ComputeDisparityRight() const
+void ADCensusStereo::ComputeDisparityRight()
 {
 	const sint32& min_disparity = option_.min_disparity;
 	const sint32& max_disparity = option_.max_disparity;
@@ -354,7 +249,7 @@ void ADCensusStereo::ComputeDisparityRight() const
 	// 右影像视差图
 	const auto disparity = disp_right_;
 	// 左影像聚合代价数组
-	const auto cost_ptr = cost_aggr_;
+	const auto cost_ptr = aggregator_.get_cost_ptr();
 
 	const sint32 width = width_;
 	const sint32 height = height_;
@@ -411,12 +306,6 @@ void ADCensusStereo::ComputeDisparityRight() const
 
 void ADCensusStereo::Release()
 {
-	SAFE_DELETE(gray_left_);
-	SAFE_DELETE(gray_right_);
-	SAFE_DELETE(census_left_);
-	SAFE_DELETE(census_right_);
-	SAFE_DELETE(cost_init_);
-	SAFE_DELETE(cost_aggr_);
 	SAFE_DELETE(disp_left_);
 	SAFE_DELETE(disp_right_);
 }

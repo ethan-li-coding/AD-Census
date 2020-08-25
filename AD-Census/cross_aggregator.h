@@ -30,18 +30,15 @@ public:
 	 * \param height	影像高
 	 * \return true:初始化成功
 	 */
-	bool Initialize(const sint32& width, const sint32& height);
-
+	bool Initialize(const sint32& width, const sint32& height, const sint32& min_disparity, const sint32& max_disparity);
 
 	/**
 	 * \brief 设置代价聚合器的数据
 	 * \param img_left		// 左影像数据，三通道
 	 * \param img_right		// 右影像数据，三通道
 	 * \param cost_init		// 初始代价数组
-	 * \param cost_aggr		// 聚合代价数组
 	 */
-	void SetData(const uint8* img_left, const uint8* img_right, const float32* cost_init, float32* cost_aggr);
-
+	void SetData(const uint8* img_left, const uint8* img_right, const float32* cost_init);
 
 	/**
 	 * \brief 设置代价聚合器的参数
@@ -49,21 +46,20 @@ public:
 	 * \param cross_L2		// L2
 	 * \param cross_t1		// t1
 	 * \param cross_t2		// t2
-	 * \param min_disparity	// 最小视差	
-	 * \param max_disparity	// 最大视差
 	 */
-	void SetParams(const sint32& cross_L1, const sint32& cross_L2, const sint32& cross_t1, const sint32& cross_t2, const sint32& min_disparity, const sint32& max_disparity);
-
-	/** \brief 构建十字交叉臂 */
-	void BuildArms();
+	void SetParams(const sint32& cross_L1, const sint32& cross_L2, const sint32& cross_t1, const sint32& cross_t2);
 
 	/** \brief 聚合 */
 	void Aggregate(const sint32& num_iters);
 
-	/** \brief 获取所有像素的十字交叉臂数据 */
-	vector<CrossArm>& get_arms();
+	/** \brief 获取所有像素的十字交叉臂数据指针 */
+	CrossArm* get_arms_ptr();
 
+	/** \brief 获取聚合代价数组指针 */
+	float32* get_cost_ptr();
 private:
+	/** \brief 构建十字交叉臂 */
+	void BuildArms();
 	/** \brief 搜索水平臂 */
 	void FindHorizontalArm(const sint32& x, const sint32& y, uint8& left, uint8& right) const;
 	/** \brief 搜索竖直臂 */
@@ -89,10 +85,10 @@ private:
 	const uint8* img_left_;
 	const uint8* img_right_;
 
-	/** \brief 初始代价数据 */
+	/** \brief 初始代价数组指针 */
 	const float32* cost_init_;
-	/** \brief 聚合代价数据 */
-	float32* cost_aggr_;
+	/** \brief 聚合代价数组 */
+	vector<float32> cost_aggr_;
 
 	/** \brief 临时代价数据 */
 	vector<float32> vec_cost_tmp_[2];
@@ -104,7 +100,10 @@ private:
 	sint32  cross_L2_;			// 十字交叉窗口的空间域参数：L2
 	sint32	cross_t1_;			// 十字交叉窗口的颜色域参数：t1
 	sint32  cross_t2_;			// 十字交叉窗口的颜色域参数：t2
-	sint32  min_disp_;			// 最小视差
-	sint32	max_disp_;			// 最大视差
+	sint32  min_disparity_;			// 最小视差
+	sint32	max_disparity_;			// 最大视差
+
+	/** \brief 是否成功初始化标志	*/
+	bool is_initialized_;
 };
 #endif

@@ -6,76 +6,75 @@
 
 #include "cross_aggregator.h"
 
-CrossAggregator::CrossAggregator(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr), 
-									cost_init_(nullptr), cost_aggr_(nullptr),
+CrossAggregator::CrossAggregator(): width_(0), height_(0), img_left_(nullptr), img_right_(nullptr),
+                                    cost_init_(nullptr),
                                     cross_L1_(0), cross_L2_(0), cross_t1_(0), cross_t2_(0),
-                                    min_disp_(0), max_disp_(0)
-{
-	
-}
+                                    min_disparity_(0), max_disparity_(0), is_initialized_(false) { }
 
 CrossAggregator::~CrossAggregator()
 {
 	
 }
 
-bool CrossAggregator::Initialize(const sint32& width, const sint32& height)
+bool CrossAggregator::Initialize(const sint32& width, const sint32& height, const sint32& min_disparity, const sint32& max_disparity)
 {
 	width_ = width;
 	height_ = height;
-	if (width_ <= 0 || height_ <= 0) {
-		return false;
+	min_disparity_ = min_disparity;
+	max_disparity_ = max_disparity;
+	
+	const sint32 img_size = width_ * height_;
+	const sint32 disp_range = max_disparity_ - min_disparity_;
+	if (img_size <= 0 || disp_range <= 0) {
+		is_initialized_ = false;
+		return is_initialized_;
 	}
 
 	// 为交叉十字臂数组分配内存
 	vec_cross_arms_.clear();
-	vec_cross_arms_.resize(width_*height_);
+	vec_cross_arms_.resize(img_size);
 
 	// 为临时代价数组分配内存
 	vec_cost_tmp_[0].clear();
-	vec_cost_tmp_[0].resize(width_*height_);
+	vec_cost_tmp_[0].resize(img_size);
 	vec_cost_tmp_[1].clear();
-	vec_cost_tmp_[1].resize(width_ * height_);
+	vec_cost_tmp_[1].resize(img_size);
 
 	// 为存储每个像素支持区像素数量的数组分配内存
 	vec_sup_count_[0].clear();
-	vec_sup_count_[0].resize(width_*height_);
+	vec_sup_count_[0].resize(img_size);
 	vec_sup_count_[1].clear();
-	vec_sup_count_[1].resize(width_*height_);
+	vec_sup_count_[1].resize(img_size);
 	vec_sup_count_tmp_.clear();
-	vec_sup_count_tmp_.resize(width_*height_);
+	vec_sup_count_tmp_.resize(img_size);
 
-	return true;
+	// 为聚合代价数组分配内存
+	cost_aggr_.resize(img_size * disp_range);
+
+	is_initialized_ = !vec_cross_arms_.empty() && !vec_cost_tmp_[0].empty() && !vec_cost_tmp_[1].empty() 
+					&& !vec_sup_count_[0].empty() && !vec_sup_count_[1].empty() 
+					&& !vec_sup_count_tmp_.empty() && !cost_aggr_.empty();
+	return is_initialized_;
 }
 
-void CrossAggregator::SetData(const uint8* img_left, const uint8* img_right, const float32* cost_init, float32* cost_aggr)
+void CrossAggregator::SetData(const uint8* img_left, const uint8* img_right, const float32* cost_init)
 {
 	img_left_ = img_left;
 	img_right_ = img_right;
 	cost_init_ = cost_init;
-	cost_aggr_ = cost_aggr;
 }
 
 void CrossAggregator::SetParams(const sint32& cross_L1, const sint32& cross_L2, const sint32& cross_t1,
-	const sint32& cross_t2, const sint32& min_disparity, const sint32& max_disparity)
+	const sint32& cross_t2)
 {
 	cross_L1_ = cross_L1;
 	cross_L2_ = cross_L2;
 	cross_t1_ = cross_t1;
 	cross_t2_ = cross_t2;
-	min_disp_ = min_disparity;
-	max_disp_ = max_disparity;
 }
 
 void CrossAggregator::BuildArms() 
 {
-	if (width_ <= 0 || height_ <= 0 ||
-		img_left_ == nullptr || img_right_ == nullptr ||
-		cost_init_ == nullptr || cost_aggr_ == nullptr ||
-		vec_cross_arms_.empty()) {
-		return;
-	}
-
 	// 逐像素计算十字交叉臂
 	for (sint32 y = 0; y < height_; y++) {
 		for (sint32 x = 0; x < width_; x++) {
@@ -89,17 +88,16 @@ void CrossAggregator::BuildArms()
 
 void CrossAggregator::Aggregate(const sint32& num_iters)
 {
-	if (width_ <= 0 || height_ <= 0 ||
-		img_left_ == nullptr || img_right_ == nullptr ||
-		cost_init_ == nullptr || cost_aggr_ == nullptr ||
-		vec_cross_arms_.empty() || vec_cost_tmp_[0].empty()|| vec_cost_tmp_[1].empty()) {
-		return;
-	}
-	const sint32 disp_range = max_disp_ - min_disp_;
-	if (disp_range <= 0) {
+	if (!is_initialized_) {
 		return;
 	}
 
+	const sint32 disp_range = max_disparity_ - min_disparity_;
+
+	// 构建像素的十字交叉臂
+	BuildArms();
+
+	// 代价聚合
 	// horizontal_first 代表先水平方向聚合
 	bool horizontal_first = true;
 
@@ -107,11 +105,11 @@ void CrossAggregator::Aggregate(const sint32& num_iters)
 	ComputeSupPixelCount();
 
 	// 先将聚合代价初始化为初始代价
-	memcpy(cost_aggr_, cost_init_, width_*height_*disp_range*sizeof(float32));
+	memcpy(&cost_aggr_[0], cost_init_, width_*height_*disp_range*sizeof(float32));
 
 	// 多迭代聚合
 	for (sint32 k = 0; k < num_iters; k++) {
-		for (sint32 d = min_disp_; d < max_disp_; d++) {
+		for (sint32 d = min_disparity_; d < max_disparity_; d++) {
 			AggregateInArms(d, horizontal_first);
 		}
 		// 下一次迭代，调换顺序
@@ -119,9 +117,19 @@ void CrossAggregator::Aggregate(const sint32& num_iters)
 	}
 }
 
-vector<CrossArm>& CrossAggregator::get_arms()
+CrossArm* CrossAggregator::get_arms_ptr()
 {
-	return vec_cross_arms_;
+	return &vec_cross_arms_[0];
+}
+
+float32* CrossAggregator::get_cost_ptr()
+{
+	if (!cost_aggr_.empty()) {
+		return &cost_aggr_[0];
+	}
+	else {
+		return nullptr;
+	}
 }
 
 void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8& left, uint8& right) const
@@ -320,11 +328,11 @@ void CrossAggregator::AggregateInArms(const sint32& disparity, const bool& horiz
 {
 	// 此函数聚合所有像素当视差为disparity时的代价
 
-	if (disparity < min_disp_ || disparity >= max_disp_) {
+	if (disparity < min_disparity_ || disparity >= max_disparity_) {
 		return;
 	}
-	const auto disp = disparity - min_disp_;
-	const sint32 disp_range = max_disp_ - min_disp_;
+	const auto disp = disparity - min_disparity_;
+	const sint32 disp_range = max_disparity_ - min_disparity_;
 	if (disp_range <= 0) {
 		return;
 	}

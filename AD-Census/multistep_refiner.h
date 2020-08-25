@@ -32,7 +32,7 @@ public:
 	 * \param disp_left			// 左视图视差数据
 	 * \param disp_right		// 右视图视差数据
 	 */
-	void SetData(const uint8* img_left, float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right);
+	void SetData(const uint8* img_left, float32* cost,const CrossArm* cross_arms, float32* disp_left, float32* disp_right);
 
 
 	/**
@@ -77,7 +77,7 @@ private:
 	/** \brief 代价数据 */
 	float32* cost_;
 	/** \brief 交叉臂数据 */
-	const vector<CrossArm>* vec_cross_arms_;
+	const CrossArm* cross_arms_;
 
 	/** \brief 左视图视差数据 */
 	float* disp_left_;

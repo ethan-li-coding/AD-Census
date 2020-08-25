@@ -8,7 +8,7 @@
 #include "adcensus_util.h"
 
 MultiStepRefiner::MultiStepRefiner(): width_(0), height_(0), img_left_(nullptr), cost_(nullptr),
-                                      vec_cross_arms_(nullptr),
+                                      cross_arms_(nullptr),
                                       disp_left_(nullptr), disp_right_(nullptr),
                                       min_disparity_(0), max_disparity_(0),
                                       irv_ts_(0), irv_th_(0), lrcheck_thres_(0),
@@ -34,11 +34,11 @@ bool MultiStepRefiner::Initialize(const sint32& width, const sint32& height)
 	return true;
 }
 
-void MultiStepRefiner::SetData(const uint8* img_left, float32* cost, const vector<CrossArm>* cross_arms, float32* disp_left, float32* disp_right)
+void MultiStepRefiner::SetData(const uint8* img_left, float32* cost,const CrossArm* cross_arms, float32* disp_left, float32* disp_right)
 {
 	img_left_ = img_left;
 	cost_ = cost; 
-	vec_cross_arms_ = cross_arms;
+	cross_arms_ = cross_arms;
 	disp_left_ = disp_left;
 	disp_right_= disp_right;
 }
@@ -61,7 +61,7 @@ void MultiStepRefiner::Refine()
 {
 	if (width_ <= 0 || height_ <= 0 ||
 		disp_left_ == nullptr || disp_right_ == nullptr ||
-		cost_ == nullptr || vec_cross_arms_ == nullptr) {
+		cost_ == nullptr || cross_arms_ == nullptr) {
 		return;
 	}
 
@@ -158,7 +158,7 @@ void MultiStepRefiner::IterativeRegionVoting()
 	if(disp_range <= 0) {
 		return;
 	}
-	const auto& vec_arms = *vec_cross_arms_;
+	const auto arms = cross_arms_;
 
 	// 直方图
 	vector<sint32> histogram(disp_range,0);
@@ -182,11 +182,11 @@ void MultiStepRefiner::IterativeRegionVoting()
 
 				// 计算支持区的视差直方图
 				// 获取arm
-				auto& arm = vec_arms[y * width + x];
+				auto& arm = arms[y * width + x];
 				// 遍历支持区像素视差，统计直方图
 				for (sint32 t = -arm.top; t <= arm.bottom; t++) {
 					const sint32& yt = y + t;
-					auto& arm2 = vec_arms[yt * width_ + x];
+					auto& arm2 = arms[yt * width_ + x];
 					for (sint32 s = -arm2.left; s <= arm2.right; s++) {
 						const auto& d = disp_left_[yt * width + x + s];
 						if (d != Invalid_Float) {
