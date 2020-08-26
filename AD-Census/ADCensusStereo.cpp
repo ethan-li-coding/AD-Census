@@ -85,7 +85,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 
 	auto end = steady_clock::now();
 	auto tt = duration_cast<milliseconds>(end - start);
-	printf("computing cost! timing : %lf s\n", tt.count() / 1000.0);
+	printf("computing cost! timing :	%lf s\n", tt.count() / 1000.0);
 	start = steady_clock::now();
 
 	// 代价聚合
@@ -93,7 +93,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);
-	printf("cost aggregating! timing : %lf s\n", tt.count() / 1000.0);
+	printf("cost aggregating! timing :	%lf s\n", tt.count() / 1000.0);
 	start = steady_clock::now();
 
 	// 扫描线优化
@@ -101,7 +101,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);
-	printf("scanline optimizing! timing : %lf s\n", tt.count() / 1000.0);
+	printf("scanline optimizing! timing :	%lf s\n", tt.count() / 1000.0);
 	start = steady_clock::now();
 
 	// 计算左右视图视差
@@ -110,7 +110,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);
-	printf("computing disparities! timing : %lf s\n", tt.count() / 1000.0);
+	printf("computing disparities! timing :	%lf s\n", tt.count() / 1000.0);
 	start = steady_clock::now();
 
 	// 多步骤视差优化
@@ -118,10 +118,15 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);
-	printf("multistep refining! timing : %lf s\n", tt.count() / 1000.0);
+	printf("multistep refining! timing :	%lf s\n", tt.count() / 1000.0);
+	start = steady_clock::now();
 
 	// 输出视差图
 	memcpy(disp_left, disp_left_, height_ * width_ * sizeof(float32));
+	
+	end = steady_clock::now();
+	tt = duration_cast<milliseconds>(end - start);
+	printf("output disparities! timing :	%lf s\n", tt.count() / 1000.0);
 
 	return true;
 }
@@ -283,7 +288,7 @@ void ADCensusStereo::ComputeDisparityRight()
 
 			// ---子像素拟合
 			if (best_disparity == min_disparity || best_disparity == max_disparity - 1) {
-				disparity[i * width + j] = Invalid_Float;
+				disparity[i * width + j] = best_disparity;
 				continue;
 			}
 

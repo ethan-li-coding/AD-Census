@@ -84,14 +84,19 @@ int main(int argv, char** argc)
 	// 一致性检查阈值
 	ad_option.lrcheck_thres = 1.0f;
 
+	// 是否执行一致性检查
 	ad_option.do_lr_check = true;
+
+	// 是否执行视差填充
+	// 视差图填充的结果并不可靠，若工程，不建议填充，若科研，则可填充
 	ad_option.do_filling = true;
 	
+	printf("w = %d, h = %d, d = [%d,%d]\n\n", width, height, ad_option.min_disparity, ad_option.max_disparity);
 
 	// 定义AD-Census匹配类实例
 	ADCensusStereo ad_census;
 
-	printf("AD-Census Initializing...");
+	printf("AD-Census Initializing...\n");
 	auto start = steady_clock::now();
 	//···············································································//
 	// 初始化
@@ -101,21 +106,22 @@ int main(int argv, char** argc)
 	}
 	auto end = steady_clock::now();
 	auto tt = duration_cast<milliseconds>(end - start);
-	printf("Done! Timing : %lf s\n", tt.count() / 1000.0);
+	printf("AD-Census Initializing Done! Timing :	%lf s\n\n", tt.count() / 1000.0);
 
 	printf("AD-Census Matching...\n");
+	// disparity数组保存子像素的视差结果
+	auto disparity = new float32[uint32(width * height)]();
+
 	start = steady_clock::now();
 	//···············································································//
 	// 匹配
-	// disparity数组保存子像素的视差结果
-	auto disparity = new float32[uint32(width * height)]();
 	if (!ad_census.Match(bytes_left, bytes_right, disparity)) {
 		std::cout << "AD-Census匹配失败！" << std::endl;
 		return -2;
 	}
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);
-	printf("Done! Timing : %lf s\n", tt.count() / 1000.0);
+	printf("\nAD-Census Matching...Done! Timing :	%lf s\n", tt.count() / 1000.0);
 
 	//···············································································//
 	// 显示视差图
