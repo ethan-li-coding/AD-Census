@@ -1,7 +1,7 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
 * Author	: Ethan Li<ethan.li.whu@gmail.com>
 * https://github.com/ethan-li-coding/AD-Census
-* Describe	: header of class CrossAggregator
+* Describe	: header of class CostComputor
 */
 
 #ifndef AD_CENSUS_COST_COMPUTOR_H_
