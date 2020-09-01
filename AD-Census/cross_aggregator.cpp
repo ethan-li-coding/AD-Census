@@ -248,7 +248,7 @@ void CrossAggregator::FindVerticalArm(const sint32& x, const sint32& y, uint8& t
 			}
 
 			// 臂长大于L2后，颜色距离阈值减小为t2
-			if (k + 1 > cross_L2_) {
+			if (n + 1 > cross_L2_) {
 				if (color_dist1 >= cross_t2_) {
 					break;
 				}

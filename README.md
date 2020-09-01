@@ -1,5 +1,5 @@
 # AD-Census
-AD-Census双目立体匹配算法完整实现，代码规范，注释丰富且清晰，欢迎star!
+AD-Census立体匹配算法，中国学者Xing Mei等人研究成果（Respect！），算法效率高、效果出色，适合硬件加速，Intel RealSense D400 Stereo模块算法。完整实现，代码规范，注释清晰，欢迎star！
 
 <table>
     <tr>
