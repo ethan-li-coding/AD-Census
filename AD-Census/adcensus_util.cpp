@@ -1,5 +1,5 @@
 /* -*-c++-*- AD-Census - Copyright (C) 2020.
-* Author	: Ethan Li <ethan.li.whu@gmail.com>
+* Author	: Yingsong Li(Ethan Li) <ethan.li.whu@gmail.com>
 * https://github.com/ethan-li-coding/AD-Census
 * Describe	: implement of adcensus_util
 */
