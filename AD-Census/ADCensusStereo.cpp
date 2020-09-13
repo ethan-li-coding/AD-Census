@@ -167,11 +167,11 @@ void ADCensusStereo::CostAggregation()
 void ADCensusStereo::ScanlineOptimize()
 {
 	// 设置优化器数据
-	scan_line.SetData(img_left_, img_right_, cost_computer_.get_cost_ptr(), aggregator_.get_cost_ptr());
+	scan_line_.SetData(img_left_, img_right_, cost_computer_.get_cost_ptr(), aggregator_.get_cost_ptr());
 	// 设置优化器参数
-	scan_line.SetParam(width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso);
+	scan_line_.SetParam(width_, height_, option_.min_disparity, option_.max_disparity, option_.so_p1, option_.so_p2, option_.so_tso);
 	// 扫描线优化
-	scan_line.Optimize();
+	scan_line_.Optimize();
 }
 
 void ADCensusStereo::MultiStepRefine()
