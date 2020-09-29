@@ -81,7 +81,7 @@ private:
 	/** \brief 代价聚合器 */
 	CrossAggregator aggregator_;
 	/** \brief 扫描线优化器 */
-	ScanlineOptimizer scan_line;
+	ScanlineOptimizer scan_line_;
 	/** \brief 多步优化器 */
 	MultiStepRefiner refiner_;
 
