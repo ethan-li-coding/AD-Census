@@ -148,7 +148,7 @@ void CrossAggregator::FindHorizontalArm(const sint32& x, const sint32& y, uint8&
 		auto img = img0 + dir * 3;
 		auto color_last = color0;
 		sint32 xn = x + dir;
-		for (sint32 n = 0; n < cross_L1_; n++) {
+		for (sint32 n = 0; n < std::min(cross_L1_, MAX_ARM_LENGTH); n++) {
 
 			// 边界处理
 			if (k == 0) {
@@ -216,7 +216,7 @@ void CrossAggregator::FindVerticalArm(const sint32& x, const sint32& y, uint8& t
 		auto img = img0 + dir * width_ * 3;
 		auto color_last = color0;
 		sint32 yn = y + dir;
-		for (sint32 n = 0; n < cross_L1_; n++) {
+		for (sint32 n = 0; n < std::min(cross_L1_, MAX_ARM_LENGTH); n++) {
 
 			// 边界处理
 			if (k == 0) {

@@ -18,7 +18,12 @@ struct CrossArm {
 	uint8 left, right, top, bottom;
 	CrossArm() : left(0), right(0), top(0), bottom(0) { }
 };
+/**\brief 最大臂长 */
+#define MAX_ARM_LENGTH 255 
 
+/**
+ * \brief 十字交叉域代价聚合器
+ */
 class CrossAggregator {
 public:
 	CrossAggregator();

@@ -34,7 +34,6 @@ public:
 	 */
 	void SetData(const uint8* img_left, const uint8* img_right);
 
-
 	/**
 	 * \brief 设置代价计算器的参数
 	 * \param lambda_ad		// lambda_ad
