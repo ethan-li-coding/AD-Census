@@ -5,7 +5,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>..\Data\cone\im2.png ..\Data\cone\im6.png 0 64</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>..\Data\cone\im2.png ..\Data\cone\im6.png -64 64</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

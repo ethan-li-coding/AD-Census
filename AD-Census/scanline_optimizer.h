@@ -11,6 +11,9 @@
 
 #include "adcensus_types.h"
 
+/**
+ * \brief 扫描线优化器
+ */
 class ScanlineOptimizer {
 public:
 	ScanlineOptimizer();
@@ -44,20 +47,20 @@ public:
 
 private:
 	/**
-	* \brief 左右路径聚合 → ←
+	* \brief 左右路径优化 → ←
 	* \param cost_so_src		输入，SO前代价数据
 	* \param cost_so_dst		输出，SO后代价数据
 	* \param is_forward			输入，是否为正方向（正方向为从左到右，反方向为从右到左）
 	*/
-	void CostAggregateLeftRight(const float32* cost_so_src, float32* cost_so_dst, bool is_forward = true);
+	void ScanlineOptimizeLeftRight(const float32* cost_so_src, float32* cost_so_dst, bool is_forward = true);
 
 	/**
-	* \brief 上下路径聚合 ↓ ↑
+	* \brief 上下路径优化 ↓ ↑
 	* \param cost_so_src		输入，SO前代价数据
 	* \param cost_so_dst		输出，SO后代价数据
 	* \param is_forward			输入，是否为正方向（正方向为从上到下，反方向为从下到上）
 	*/
-	void CostAggregateUpDown(const float32* cost_so_src, float32* cost_so_dst, bool is_forward = true);
+	void ScanlineOptimizeUpDown(const float32* cost_so_src, float32* cost_so_dst, bool is_forward = true);
 
 	/** \brief 计算颜色距离 */
 	inline sint32 ColorDist(const ADColor& c1, const ADColor& c2) {

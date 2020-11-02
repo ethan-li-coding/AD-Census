@@ -114,7 +114,7 @@ bool ADCensusStereo::Match(const uint8* img_left, const uint8* img_right, float3
 	start = steady_clock::now();
 
 	// 多步骤视差优化
-	MultiStepRefine();
+	//MultiStepRefine();
 
 	end = steady_clock::now();
 	tt = duration_cast<milliseconds>(end - start);

@@ -51,16 +51,16 @@ void ScanlineOptimizer::Optimize()
 	// 模块的最终输出也是cost_aggr_
 	
 	// left to right
-	CostAggregateLeftRight(cost_aggr_, cost_init_, true);
+	ScanlineOptimizeLeftRight(cost_aggr_, cost_init_, true);
 	// right to left
-	CostAggregateLeftRight(cost_init_, cost_aggr_, false);
+	ScanlineOptimizeLeftRight(cost_init_, cost_aggr_, false);
 	// up to down
-	CostAggregateUpDown(cost_aggr_, cost_init_, true);
+	ScanlineOptimizeUpDown(cost_aggr_, cost_init_, true);
 	// down to up
-	CostAggregateUpDown(cost_init_, cost_aggr_, false);
+	ScanlineOptimizeUpDown(cost_init_, cost_aggr_, false);
 }
 
-void ScanlineOptimizer::CostAggregateLeftRight(const float32* cost_so_src, float32* cost_so_dst, bool is_forward)
+void ScanlineOptimizer::ScanlineOptimizeLeftRight(const float32* cost_so_src, float32* cost_so_dst, bool is_forward)
 {
 	const auto width = width_;
 	const auto height = height_;
@@ -116,7 +116,7 @@ void ScanlineOptimizer::CostAggregateLeftRight(const float32* cost_so_src, float
 			uint8 d2 = d1;
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
-				const sint32 xr = x - d;
+				const sint32 xr = x - d - min_disparity;
 				if (xr > 0 && xr < width - 1) {
 					const ADColor color_r = ADColor(img_row_r[3 * xr], img_row_r[3 * xr + 1], img_row_r[3 * xr + 2]);
 					const ADColor color_last_r = ADColor(img_row_r[3 * (xr - direction)],
@@ -170,7 +170,7 @@ void ScanlineOptimizer::CostAggregateLeftRight(const float32* cost_so_src, float
 	}
 }
 
-void ScanlineOptimizer::CostAggregateUpDown(const float32* cost_so_src, float32* cost_so_dst, bool is_forward)
+void ScanlineOptimizer::ScanlineOptimizeUpDown(const float32* cost_so_src, float32* cost_so_dst, bool is_forward)
 {
 	const auto width = width_;
 	const auto height = height_;
@@ -225,7 +225,7 @@ void ScanlineOptimizer::CostAggregateUpDown(const float32* cost_so_src, float32*
 			uint8 d2 = d1;
 			float32 min_cost = Large_Float;
 			for (sint32 d = 0; d < disp_range; d++) {
-				const sint32 xr = x - d;
+				const sint32 xr = x - d - min_disparity;
 				if (xr > 0 && xr < width - 1) {
 					const ADColor color_r = ADColor(img_right_[y * width * 3 + 3 * xr], img_right_[y * width * 3 + 3 * xr + 1], img_right_[y * width * 3 + 3 * xr + 2]);
 					const ADColor color_last_r = ADColor(img_right_[(y - direction) * width * 3 + 3 * xr],
