@@ -332,7 +332,6 @@ void MultiStepRefiner::DepthDiscontinuityAdjustment()
 
 					// 记录左右两边像素的视差值和代价值
 					// 选择代价最小的像素视差值
-					bool adjust = false;
 					for (int k = 0; k<2; k++) {
 						const sint32 x2 = (k == 0) ? x - 1 : x + 1;
 						const float32& d2 = disp_ptr[x2];
@@ -342,7 +341,6 @@ void MultiStepRefiner::DepthDiscontinuityAdjustment()
 							if (c < c0) {
 								d = d2;
 								c0 = c;
-								adjust = true;
 							}
 						}
 					}
